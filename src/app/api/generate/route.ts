@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { getRepoData, getRepoContents } from "@/lib/octokit";
 
-//  Tip: Force dynamic to ensure API keys are read correctly at runtime
+// Ensure API keys are read at runtime
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
@@ -29,12 +29,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Please provide a valid URL" }, { status: 400 });
     }
 
-    // Hostname Guard: Only allow GitHub
+    // Hostname Guard
     if (parsedUrl.hostname !== "github.com" && parsedUrl.hostname !== "www.github.com") {
       return NextResponse.json({ error: "Only GitHub URLs are supported" }, { status: 400 });
     }
 
-    // Extract Owner and Repo securely from the path segments
+    // Extract Owner and Repo from path
     const pathSegments = parsedUrl.pathname.split("/").filter(Boolean);
     const owner = pathSegments[0];
     const repo = pathSegments[1];
@@ -49,17 +49,18 @@ export async function POST(req: Request) {
       getRepoContents(owner, repo)
     ]);
 
-    // Format file list for AI context
-    const fileList = repoContents.length > 0 
-      ? repoContents.map((f: any) => f.name).join(", ") 
-      : "Standard structure";
+    // 4. Type-Safe File Mapping (Fixes the 'any' linting error)
+    // We define the shape { name: string } inline to satisfy ESLint
+    const fileList = Array.isArray(repoContents) && repoContents.length > 0 
+      ? repoContents.map((f: { name: string }) => f.name).join(", ") 
+      : "Standard repository structure";
 
-    // 4. Initialize Gemini 2.5 (2026 Standard)
+    // 5. Initialize Gemini 2.5
     const model = getGeminiModel();
 
-    // 5. The "Expert Prompt" with Fallbacks (No more "null" or "undefined" strings)
+    // 6. The "Expert Prompt" with Fallbacks
     const prompt = `
-      You are an expert Technical Writer. Generate a professional README.md for the following repository:
+      You are an expert Technical Writer. Generate a professional README.md for:
       
       Name: ${repo}
       Description: ${repoInfo?.description || "A modern software project."}
@@ -67,16 +68,16 @@ export async function POST(req: Request) {
       Root Directory Files: ${fileList}
 
       Requirements:
-      - Use professional shields.io badges.
+      - Include professional SVG badges from shields.io.
       - Create a visual "Directory Structure" section (tree style).
       - Include "Features", "Installation", and "Usage" sections.
-      - Ensure installation steps match the Primary Language or Root Files (e.g., use npm if package.json exists).
-      - Tone: Professional, welcoming, and developer-friendly.
-
+      - If 'package.json' exists, provide Node.js installation steps.
+      - Ensure a welcoming, professional developer-centric tone.
+      
       Return ONLY the Markdown content.
     `;
 
-    // 6. Generate content
+    // 7. AI Generation
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const markdown = response.text();
@@ -84,12 +85,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ markdown });
 
   } catch (error: unknown) {
-    // Sanitize error logging to prevent leaking secrets in logs
     const message = error instanceof Error ? error.message : "Internal Server Error";
     console.error("README Generation Failed:", message);
 
     return NextResponse.json(
-      { error: "Failed to generate README. Please check your URL and try again." },
+      { error: "Failed to generate README. Check your URL and try again." },
       { status: 500 }
     );
   }
