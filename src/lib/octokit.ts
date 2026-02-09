@@ -1,28 +1,39 @@
 import { Octokit } from "octokit";
 
-/**
- *  Note: 
- * We use an environment variable for the token to keep it out of the source code.
- * Even if the token is missing, we initialize the client (it will just be rate-limited).
- */
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+// Private variable for Singleton pattern
+let _octokit: Octokit | null = null;
 
-export const octokit = new Octokit({
-  auth: GITHUB_TOKEN || undefined,
-});
+export function getOctokit(): Octokit {
+  if (_octokit) return _octokit;
+
+  const auth = process.env.GITHUB_TOKEN;
+  
+  // We don't throw an error here because Octokit can work without a token 
+  // (unauthenticated), though it will be heavily rate-limited.
+  _octokit = new Octokit({
+    auth: auth || undefined,
+  });
+
+  return _octokit;
+}
 
 /**
- * Helper to fetch repo metadata safely
+ * Fetches repository metadata safely.
+ * Notice we only log the error message, NOT the full error object.
  */
 export async function getRepoData(owner: string, repo: string) {
+  const client = getOctokit();
+  
   try {
-    const { data } = await octokit.rest.repos.get({
+    const { data } = await client.rest.repos.get({
       owner,
       repo,
     });
     return data;
-  } catch (error) {
-    console.error("Error fetching GitHub repo:", error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "An unknown error occurred";
+    console.error("Error fetching GitHub repo:", message);
+    
     return null;
   }
 }
