@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getGeminiModel } from "@/lib/gemini";
 import { getRepoData, getRepoContents } from "@/lib/octokit";
 
-// Senior Tip: Force dynamic to ensure API keys are read correctly at runtime
+//  Tip: Force dynamic to ensure API keys are read correctly at runtime
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
