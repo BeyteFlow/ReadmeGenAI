@@ -26,7 +26,8 @@ export const TerminalMockup = () => (
           <p className="text-blue-400 flex items-center gap-2">
             <span className="animate-pulse">●</span> Analyzing codebase...
           </p>
-          <p className="text-zinc-500">✓ Detected Next.js 15 & TailwindCSS</p>
+          {/* UPDATED: Reflecting Next.js 16 as per package.json */}
+          <p className="text-zinc-500">✓ Detected Next.js 16 & TailwindCSS</p>
           <p className="text-zinc-500">✓ Parsed 14 API endpoints</p>
           <p className="text-zinc-500">✓ Metadata successfully pulled from Octokit</p>
         </div>

@@ -44,7 +44,7 @@ export const Navbar = ({ links }: { links: { name: string; href: string }[] }) =
           <div className="flex items-center gap-3">
             {/* Using an anchor tag with button styling for the GitHub Link */}
             <a
-              href="https://github.com/your-username/ReadmeGenAI"
+              href="https://github.com/BeyteFlow/ReadmeGenAI"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all text-xs font-medium"
