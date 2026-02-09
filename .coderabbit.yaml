@@ -1,0 +1,15 @@
+# .coderabbit.yaml
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+
+reviews:
+  auto_review:
+    enabled: true
+    # Setting this to an empty list ensures no one (like Dependabot) is ignored
+    ignore_usernames: []
+    drafts: true
+
+  # Fix: Renamed from 'summaries' to the correct property name
+  high_level_summary: true
+  
+  # Optional: Adds the summary to the walkthrough comment for better visibility
+  high_level_summary_in_walkthrough: true
