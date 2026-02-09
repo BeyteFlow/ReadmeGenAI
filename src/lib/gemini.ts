@@ -1,10 +1,14 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { 
+  GoogleGenerativeAI, 
+  HarmCategory, 
+  HarmBlockThreshold,
+  GenerativeModel 
+} from "@google/generative-ai";
 
-// Private variable to hold the initialized model (Singleton pattern)
-let _model: any = null;
 
-export function getGeminiModel() {
-  // If we already initialized, return the existing model
+let _model: GenerativeModel | null = null;
+
+export function getGeminiModel(): GenerativeModel {
   if (_model) return _model;
 
   const apiKey = process.env.GEMINI_API_KEY;
@@ -15,9 +19,6 @@ export function getGeminiModel() {
 
   const genAI = new GoogleGenerativeAI(apiKey);
 
-  /**
-   * We now  'gemini-2.5-flash' which is the stable 2026 standard.
-   */
   _model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash", 
     safetySettings: [
