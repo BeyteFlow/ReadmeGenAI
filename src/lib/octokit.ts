@@ -1,6 +1,5 @@
 import { Octokit } from "octokit";
 
-// Private variable for Singleton pattern
 let _octokit: Octokit | null = null;
 
 export function getOctokit(): Octokit {
@@ -8,8 +7,6 @@ export function getOctokit(): Octokit {
 
   const auth = process.env.GITHUB_TOKEN;
   
-  // We don't throw an error here because Octokit can work without a token 
-  // (unauthenticated), though it will be heavily rate-limited.
   _octokit = new Octokit({
     auth: auth || undefined,
   });
@@ -18,8 +15,7 @@ export function getOctokit(): Octokit {
 }
 
 /**
- * Fetches repository metadata safely.
- * Notice we only log the error message, NOT the full error object.
+ * Fetches repository metadata (stars, description, language)
  */
 export async function getRepoData(owner: string, repo: string) {
   const client = getOctokit();
@@ -32,8 +28,29 @@ export async function getRepoData(owner: string, repo: string) {
     return data;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "An unknown error occurred";
-    console.error("Error fetching GitHub repo:", message);
-    
+    console.error("Error fetching GitHub repo metadata:", message);
     return null;
+  }
+}
+
+/**
+ * NEW: Fetches the root contents to help Gemini build the File Structure
+ */
+export async function getRepoContents(owner: string, repo: string) {
+  const client = getOctokit();
+  
+  try {
+    const { data } = await client.rest.repos.getContent({
+      owner,
+      repo,
+      path: "", // Root directory
+    });
+    
+    // Return the array of files/folders
+    return Array.isArray(data) ? data : [];
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Could not fetch contents";
+    console.error("Error fetching GitHub repo contents:", message);
+    return [];
   }
 }
