@@ -1,0 +1,9 @@
+# .coderabbit.yaml
+reviews:
+  auto_review:
+    enabled: true
+    # Leaving this empty or removing bots ensures they get reviewed
+    ignore_usernames: [] 
+  # This ensures CodeRabbit summarizes the changes even for bots
+  summaries:
+    enabled: true
