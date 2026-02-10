@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SearchInput } from '@/components/Generator/SearchInput';
 import { MarkdownPreview } from '@/components/Generator/MarkdownPreview';
+import { navLinks } from '@/constants/navLinks';
 
 export default function GeneratePage() {
   const [markdown, setMarkdown] = useState('');
@@ -11,7 +12,7 @@ export default function GeneratePage() {
 
   const handleGenerate = async (githubUrl: string) => {
     setIsLoading(true);
-    setMarkdown(''); // Clear previous results
+    setMarkdown('');
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -19,50 +20,42 @@ export default function GeneratePage() {
         body: JSON.stringify({ url: githubUrl }),
       });
 
-      const data = await response.json();
-      if (data.markdown) {
-        setMarkdown(data.markdown);
-      } else {
-        alert(data.error || "Something went wrong");
+      // Updated Error Handling logic
+      if (!response.ok) {
+        // First, get the raw text to avoid JSON parsing errors on HTML responses
+        const errorText = await response.text();
+        let errorMessage: string;
+
+        try {
+          // Attempt to parse the text as JSON
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorData.message || errorText;
+        } catch {
+          // Fallback to raw text if JSON.parse fails (e.g., 502 Bad Gateway HTML)
+          errorMessage = errorText || response.statusText;
+        }
+
+        // Throw an error that includes the HTTP status for better debugging
+        throw new Error(`[${response.status} ${response.statusText}]: ${errorMessage}`);
       }
-    } catch (error) {
-      console.error("Generation failed:", error);
-      alert("Failed to connect to the server.");
+
+      const data = await response.json();
+      setMarkdown(data.markdown);
+    } catch (error: unknown) {
+      console.error("Generation Error:", error);
+      alert(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Features', href: '/features' },
-    { name: 'Examples', href: '/examples' },
-    { name: 'Docs', href: '/docs' },
-  ];
-
   return (
     <div className="min-h-screen bg-black text-white">
       <Navbar links={navLinks} />
-      
       <main className="pt-40 pb-20 px-4 max-w-6xl mx-auto">
-        <div className="text-center mb-16 space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">Generate Documentation</h1>
-          <p className="text-gray-400">Enter your repository URL and let the AI do the heavy lifting.</p>
-        </div>
-
         <SearchInput onGenerate={handleGenerate} isLoading={isLoading} />
-        
-        {/* Results will appear here once generated */}
         <MarkdownPreview content={markdown} />
-
-        {/* Empty state helper */}
-        {!markdown && !isLoading && (
-          <div className="mt-20 text-center border border-dashed border-white/5 rounded-3xl py-20 bg-zinc-950/30">
-            <p className="text-gray-600 font-mono text-sm">Waiting for repository URL...</p>
-          </div>
-        )}
       </main>
-
       <Footer />
     </div>
   );
