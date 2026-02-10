@@ -20,7 +20,7 @@ export default function DocsPage() {
             </span>
           </h1>
           <p className="text-zinc-400 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
-            Everything you need to know about ReadmeArchitect. From quick start guides to 
+            Everything you need to know about ReadmeGenAI. From quick start guides to 
             advanced configuration, we&apos;ve got you covered.
           </p>
         </header>
