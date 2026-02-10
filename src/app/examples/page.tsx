@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/Button";
@@ -52,11 +52,51 @@ const examples = [
 export default function ExamplesPage() {
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  
+  // Refs for timeout and accessibility management
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Handle Modal Side Effects: Body Scroll, Escape Key, and Initial Focus
+  useEffect(() => {
+    if (previewContent) {
+      // 1. Lock body scroll
+      document.body.style.overflow = "hidden";
+
+      // 2. Focus the close button for keyboard accessibility
+      closeButtonRef.current?.focus();
+
+      // 3. Close on Escape key press
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setPreviewContent(null);
+      };
+
+      window.addEventListener("keydown", handleKeyDown);
+      
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [previewContent]);
 
   const handleCopy = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      
+      // Clear previous timeout if user clicks rapidly
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+      setCopied(true);
+      
+      // Success path: reset icon after 2 seconds
+      timeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 2000);
+    } catch (err) {
+      // Error path: log rejection and prevent UI from showing "Checked"
+      console.error("Failed to copy text: ", err);
+    }
   };
 
   return (
@@ -130,8 +170,16 @@ export default function ExamplesPage() {
 
         {/* --- README PREVIEW MODAL --- */}
         {previewContent && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <div className="bg-zinc-900 border border-white/10 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
+            onClick={() => setPreviewContent(null)} // Close on backdrop click
+          >
+            <div 
+              className="bg-zinc-900 border border-white/10 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+              role="dialog"
+              aria-modal="true"
+            >
               <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
                 <span className="text-xs font-mono text-gray-400">
                   README_PREVIEW.md
@@ -139,6 +187,7 @@ export default function ExamplesPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleCopy(previewContent)}
+                    title="Copy to clipboard"
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
                   >
                     {copied ? (
@@ -148,8 +197,12 @@ export default function ExamplesPage() {
                     )}
                   </button>
                   <button
-                  aria-label="button"
-                    onClick={() => setPreviewContent(null)}
+                    ref={closeButtonRef}
+                    aria-label="Close preview"
+                    onClick={() => {
+                      setPreviewContent(null);
+                      setCopied(false);
+                    }}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
                   >
                     <X size={16} />
