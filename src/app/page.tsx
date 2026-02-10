@@ -33,9 +33,8 @@ export default function Home() {
       <main>
         <Hero />
         
-        <div id="features">
-          <Features items={featureList} />
-        </div>
+        {/* Removed the wrapper div that had the duplicate id="features" */}
+        <Features items={featureList} />
       </main>
 
       <Footer />
