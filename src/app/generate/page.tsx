@@ -20,14 +20,29 @@ export default function GeneratePage() {
         body: JSON.stringify({ url: githubUrl }),
       });
 
+      // Updated Error Handling logic
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Generation failed");
+        // First, get the raw text to avoid JSON parsing errors on HTML responses
+        const errorText = await response.text();
+        let errorMessage: string;
+
+        try {
+          // Attempt to parse the text as JSON
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorData.message || errorText;
+        } catch {
+          // Fallback to raw text if JSON.parse fails (e.g., 502 Bad Gateway HTML)
+          errorMessage = errorText || response.statusText;
+        }
+
+        // Throw an error that includes the HTTP status for better debugging
+        throw new Error(`[${response.status} ${response.statusText}]: ${errorMessage}`);
       }
 
       const data = await response.json();
       setMarkdown(data.markdown);
     } catch (error: unknown) {
+      console.error("Generation Error:", error);
       alert(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setIsLoading(false);
