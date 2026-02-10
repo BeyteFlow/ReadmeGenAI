@@ -52,7 +52,7 @@ export default function FeaturesPage() {
         <div className="max-w-5xl mx-auto text-center mb-20">
           <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
             Documentation <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
+            <span className="bg-clip-text text-transparent bg-linear-to-b from-white to-white/40">
               reimagined.
             </span>
           </h1>

@@ -1,10 +1,20 @@
 "use client";
-import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { Button } from '@/components/ui/Button';
-import {  ExternalLink, Star, Box, Cpu, Globe } from 'lucide-react';
-import Link from 'next/link';
+import React, { useState } from "react";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { Button } from "@/components/ui/Button";
+import {
+  ExternalLink,
+  Box,
+  Cpu,
+  Globe,
+  Eye,
+  X,
+  Copy,
+  Check,
+} from "lucide-react";
+import Link from "next/link";
+import { navLinks } from "@/constants/navLinks";
 
 const examples = [
   {
@@ -13,7 +23,9 @@ const examples = [
     icon: <Globe className="text-blue-400" />,
     tags: ["Next.js 16", "Tailwind", "Prisma"],
     stars: "1.2k",
-    description: "A comprehensive README featuring deployment guides, environment variable tables, and architecture diagrams."
+    description:
+      "A comprehensive README featuring deployment guides, environment variable tables, and architecture diagrams.",
+    markdown: `# 🚀 Next.js SaaS Foundation\n\nA professional starter kit for high-performance web applications.\n\n## 🛠 Features\n- **Authentication:** NextAuth.js with multi-provider support.\n- **Database:** Prisma ORM with automated migrations.\n- **UI:** Server-side rendered components via Radix UI.\n\n## 📦 Getting Started\n1. Clone the repo\n2. Run \`npm install\`\n3. Setup \`.env\` file\n4. \`npm run dev\``,
   },
   {
     title: "Utility Library",
@@ -21,7 +33,9 @@ const examples = [
     icon: <Box className="text-emerald-400" />,
     tags: ["TypeScript", "Rollup", "Vitest"],
     stars: "850",
-    description: "Technical-heavy documentation with API references, installation via multiple package managers, and usage snippets."
+    description:
+      "Technical documentation with API references, installation via multiple package managers, and usage snippets.",
+    markdown: `# 📦 TS-Utils Core\n\nHigh-performance TypeScript utilities for modern engines.\n\n## 📥 Installation\n\`\`\`bash\nnpm install ts-utils-core\n\`\`\`\n\n## 📖 Quick Usage\n\`\`\`typescript\nimport { formatDate } from 'ts-utils-core';\n\nconst date = formatDate(new Date());\n\`\`\``,
   },
   {
     title: "Backend Engine",
@@ -29,20 +43,24 @@ const examples = [
     icon: <Cpu className="text-purple-400" />,
     tags: ["Go", "Docker", "Redis"],
     stars: "2.4k",
-    description: "High-performance oriented README focusing on benchmark results, configuration flags, and horizontal scaling."
-  }
+    description:
+      "Performance oriented README focusing on benchmark results, configuration flags, and scaling.",
+    markdown: `# ⚡ Go Stream Processor\n\nUltra-low latency data streaming engine.\n\n## 📊 Performance Benchmarks\n| Case | Latency | Throughput |\n|------|---------|------------|\n| Sync | 1.2ms   | 50k ops/s  |\n| Async| 0.4ms   | 250k ops/s |\n\n## 🐳 Deployment\n\`\`\`bash\ndocker-compose up -d\n\`\`\``,
+  },
 ];
 
 export default function ExamplesPage() {
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Features', href: '/#features' },
-    { name: 'Examples', href: '/examples' },
-    { name: 'Docs', href: '#docs' },
-  ];
+  const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-white/30">
+    <div className="min-h-screen bg-black text-white selection:bg-blue-500/30">
       <Navbar links={navLinks} />
 
       <main className="pt-32 pb-20 px-4">
@@ -55,25 +73,28 @@ export default function ExamplesPage() {
             </span>
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Explore how ReadmeGenAI adapts to different tech stacks and project scales to create documentation that converts visitors into users.
+            Explore how ReadmeGenAI adapts to different tech stacks and project
+            scales.
           </p>
         </div>
 
         {/* Examples Grid */}
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {examples.map((example, idx) => (
-            <div 
-              key={idx} 
-              className="group relative p-8 rounded-3xl bg-zinc-950 border border-white/5 hover:border-white/20 transition-all duration-300"
+            <div
+              key={idx}
+              className="group relative p-8 rounded-3xl bg-zinc-950 border border-white/5 hover:border-white/20 transition-all"
             >
               <div className="flex justify-between items-start mb-6">
                 <div className="p-3 rounded-2xl bg-white/5 group-hover:bg-white/10 transition-colors">
                   {example.icon}
                 </div>
-                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
-                  <Star size={12} className="fill-current text-amber-500/50" />
-                  {example.stars}
-                </div>
+                <button
+                  onClick={() => setPreviewContent(example.markdown)}
+                  className="flex items-center gap-1.5 text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+                >
+                  <Eye size={14} /> View Sample
+                </button>
               </div>
 
               <h3 className="text-xl font-bold mb-2 group-hover:text-blue-400 transition-colors">
@@ -87,31 +108,71 @@ export default function ExamplesPage() {
               </p>
 
               <div className="flex flex-wrap gap-2 mb-8">
-                {example.tags.map(tag => (
-                  <span key={tag} className="px-2 py-1 rounded-md bg-white/5 text-[10px] font-semibold tracking-wider uppercase text-gray-400">
+                {example.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 rounded-md bg-white/5 text-[10px] font-semibold tracking-wider uppercase text-gray-400"
+                  >
                     {tag}
                   </span>
                 ))}
               </div>
 
-              <Link href="/#search-input">
-                <Button variant="outline" className="w-full text-sm py-2">
+              <Button variant="outline" className="w-full text-sm py-2" asChild>
+                <Link href="/generate">
                   Try this style
                   <ExternalLink size={14} />
-                </Button>
-              </Link>
+                </Link>
+              </Button>
             </div>
           ))}
         </div>
 
+        {/* --- README PREVIEW MODAL --- */}
+        {previewContent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="bg-zinc-900 border border-white/10 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between p-4 border-b border-white/5 bg-white/5">
+                <span className="text-xs font-mono text-gray-400">
+                  README_PREVIEW.md
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleCopy(previewContent)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                  >
+                    {copied ? (
+                      <Check size={16} className="text-emerald-400" />
+                    ) : (
+                      <Copy size={16} />
+                    )}
+                  </button>
+                  <button
+                  aria-label="button"
+                    onClick={() => setPreviewContent(null)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+              <div className="p-8 max-h-[60vh] overflow-y-auto">
+                <pre className="text-sm text-zinc-300 font-mono whitespace-pre-wrap leading-relaxed">
+                  {previewContent}
+                </pre>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bottom CTA */}
         <div className="mt-32 max-w-4xl mx-auto p-12 rounded-[3rem] bg-linear-to-b from-zinc-900 to-black border border-white/5 text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to document your project?</h2>
-          <Link href="/generate">
-            <Button className="px-12 py-6 text-lg">
-              Start Generating for Free
-            </Button>
-          </Link>
+          <h2 className="text-3xl font-bold mb-6">
+            Ready to document your project?
+          </h2>
+          <Button className="px-12 py-6 text-lg" asChild>
+            <Link href="/generate">Start Generating for Free</Link>
+          </Button>
         </div>
       </main>
 

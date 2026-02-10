@@ -5,10 +5,14 @@ import { Copy, Check, FileCode } from 'lucide-react';
 export const MarkdownPreview = ({ content }: { content: string }) => {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   };
 
   if (!content) return null;
@@ -21,18 +25,13 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
             <FileCode size={16} />
             <span>README.md</span>
           </div>
-          <button 
-            onClick={handleCopy}
-            className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white"
-          >
+          <button onClick={handleCopy} className="flex items-center gap-2 text-xs font-medium px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 transition-colors text-white">
             {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
             {copied ? 'Copied!' : 'Copy Markdown'}
           </button>
         </div>
-        <div className="p-8 overflow-x-auto">
-          <pre className="font-mono text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
-            {content}
-          </pre>
+        <div className="p-8 overflow-x-auto font-mono text-sm text-gray-300 whitespace-pre-wrap">
+          {content}
         </div>
       </div>
     </div>

@@ -1,80 +1,37 @@
-"use client";
-import React from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
-import { ChevronRight, Terminal } from 'lucide-react';
+import { QuickStart } from '@/components/docs/QuickStart';
+import { DocSections } from '@/components/docs/DocSections';
+import { FAQ } from '@/components/docs/FAQ';
+import { navLinks } from '@/constants/navLinks';
 
 export default function DocsPage() {
-  const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Features', href: '/features' },
-    { name: 'Examples', href: '/examples' },
-    { name: 'Docs', href: '/docs' },
-  ];
-
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white relative">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size[40px_40px] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
+
       <Navbar links={navLinks} />
-      <main className="pt-32 pb-20 max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-12">
-        
-        {/* Sidebar Nav */}
-        <aside className="w-full md:w-64 space-y-8">
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-blue-500 mb-4">Introduction</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li className="text-white font-medium cursor-pointer">Getting Started</li>
-              <li className="hover:text-white cursor-pointer">Core Concepts</li>
-              <li className="hover:text-white cursor-pointer">Security</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Configuration</h4>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li className="hover:text-white cursor-pointer">Custom Prompts</li>
-              <li className="hover:text-white cursor-pointer">Template Styles</li>
-            </ul>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <div className="flex-1 max-w-3xl">
-          <h1 className="text-4xl font-bold mb-6">Getting Started</h1>
-          <p className="text-gray-400 text-lg mb-8 leading-relaxed">
-            ReadmeGenAI is designed to be plug-and-play. Our goal is to remove the friction 
-            of writing documentation so you can focus on writing code.
+      
+      <main className="relative z-10 pt-32 pb-20">
+        <header className="text-center max-w-4xl mx-auto px-4 mb-24">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter mb-6">
+            Documentation <br />
+            <span className="bg-clip-text text-transparent bg-linear-to-b from-white to-white/40">
+              at your fingertips.
+            </span>
+          </h1>
+          <p className="text-zinc-400 text-lg md:text-xl leading-relaxed max-w-2xl mx-auto">
+            Everything you need to know about ReadmeArchitect. From quick start guides to 
+            advanced configuration, we&apos;ve got you covered.
           </p>
-
-          <div className="space-y-12">
-            <section>
-              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                1. Provide your URL
-              </h2>
-              <p className="text-gray-400 mb-4">
-                Enter your public GitHub repository URL into the generator. Ensure the repo 
-                contains at least a main entry point (like `index.js` or `main.py`).
-              </p>
-            </section>
-
-            <section className="p-6 rounded-2xl bg-zinc-900 border border-white/5">
-              <div className="flex items-center gap-2 mb-4 text-blue-400 font-mono text-sm">
-                <Terminal size={16} />
-                <span>Quick Start Command</span>
-              </div>
-              <code className="text-sm bg-black p-4 rounded-lg block border border-white/10 text-zinc-300">
-                npx readmegenai@latest --repo [your-url]
-              </code>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-bold mb-4">2. AI Analysis</h2>
-              <p className="text-gray-400 mb-4">
-                Our engine uses Octokit to build a virtual file tree. This tree is passed to 
-                Gemini 2.5 Flash with a specific context window optimized for software architecture.
-              </p>
-            </section>
-          </div>
+        </header>
+        <div className="space-y-8">
+          <QuickStart />
+          <DocSections />
+          <FAQ />
         </div>
       </main>
+      
       <Footer />
     </div>
   );
