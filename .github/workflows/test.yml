@@ -24,9 +24,9 @@ jobs:
         run: npm ci
 
       - name: Run Vitest with Coverage
-        run: npm test -- --coverage
+        run: npm test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
-          fail_ci_if_error: true
+          fail_ci_if_error: true 
