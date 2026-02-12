@@ -30,6 +30,14 @@ ReadmeGenAI eliminates this friction by leveraging advanced AI to automatically 
 *   ⏱️ **Time-Saving Workflow**: Reclaim development time by automating a crucial, often tedious, documentation step.
 *   🌐 **Open-Source & Extensible**: A community-driven project that welcomes contributions and further innovation.
 
+
+<p align="center">
+  <img src="assets/mainpage.png" alt="Main Page" width="600"/>
+  <br>
+  <br>
+  <img src="assets/fearture-page.png" alt="Feature Page" width="600"/>
+</p>
+
 ## Technical Architecture
 
 ReadmeGenAI is built on a robust, modern web stack designed for performance, scalability, and developer experience.
