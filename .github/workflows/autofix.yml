@@ -1,0 +1,33 @@
+name: autofix.ci
+
+on:
+  pull_request:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Run fixes
+        run: |
+          # --ignore-unknown stops it from crashing on things like favicon.svg
+          npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css,md}" "public/**/*" "*.{js,ts,json,md}" --ignore-unknown
+          
+          # ESLint targets your source code logic
+          npx eslint src --ext .ts,.tsx --fix
+
+      - uses: autofix-ci/action@v1
+        if: always()
