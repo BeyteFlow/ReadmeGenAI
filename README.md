@@ -7,7 +7,7 @@
   <img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen" />
   <img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg" />
   <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" />
-  <img alt="GitHub stars" src="https://img.shields.io/github/stars/your-org/ReadmeGenAI?style=social" />
+  <img alt="GitHub stars" src="https://img.shields.io/github/stars/BeyteFlow/ReadmeGenAI?style=social" />
 </p>
 
 ---
