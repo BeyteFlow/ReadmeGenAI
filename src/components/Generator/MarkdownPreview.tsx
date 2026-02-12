@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw'; // Add this
+import rehypeRaw from 'rehype-raw';
+import rehypeSanitize from 'rehype-sanitize';
 import { Copy, Check, FileCode,  } from 'lucide-react';
 
 export const MarkdownPreview = ({ content }: { content: string }) => {
@@ -11,9 +12,14 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(content);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy to clipboard:', error);
+      setCopied(false);
+    }
   };
 
   if (!content) return null;
@@ -70,7 +76,7 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
           <div className="preview-content">
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]} 
-              rehypePlugins={[rehypeRaw]} 
+              rehypePlugins={[rehypeRaw, rehypeSanitize]} 
             >
               {content}
             </ReactMarkdown>
