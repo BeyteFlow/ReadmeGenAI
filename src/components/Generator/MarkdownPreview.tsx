@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw'; // Add this
@@ -9,11 +9,6 @@ import { Copy, Check, FileCode,  } from 'lucide-react';
 export const MarkdownPreview = ({ content }: { content: string }) => {
   const [view, setView] = useState<'code' | 'preview'>('preview');
   const [copied, setCopied] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(content);
@@ -21,7 +16,7 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!content || !mounted) return null;
+  if (!content) return null;
 
   return (
     <div className="mt-12 w-full max-w-4xl mx-auto border border-zinc-800 rounded-xl bg-zinc-950 overflow-hidden shadow-2xl">
