@@ -1,4 +1,4 @@
-import { Github } from 'lucide-react';
+import { Github } from "lucide-react";
 
 export const Footer = () => (
   <footer className="py-16 border-t border-white/5 bg-black">
@@ -22,7 +22,6 @@ export const Footer = () => (
         >
           <Github size={22} />
         </a>
-
       </div>
     </div>
   </footer>

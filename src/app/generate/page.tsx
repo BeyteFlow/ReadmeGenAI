@@ -1,22 +1,22 @@
 "use client";
-import React, { useState } from 'react';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { SearchInput } from '@/components/Generator/SearchInput';
-import { MarkdownPreview } from '@/components/Generator/MarkdownPreview';
-import { navLinks } from '@/constants/navLinks';
+import React, { useState } from "react";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
+import { SearchInput } from "@/components/Generator/SearchInput";
+import { MarkdownPreview } from "@/components/Generator/MarkdownPreview";
+import { navLinks } from "@/constants/navLinks";
 
 export default function GeneratePage() {
-  const [markdown, setMarkdown] = useState('');
+  const [markdown, setMarkdown] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async (githubUrl: string) => {
     setIsLoading(true);
-    setMarkdown('');
+    setMarkdown("");
     try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url: githubUrl }),
       });
 
@@ -36,7 +36,9 @@ export default function GeneratePage() {
         }
 
         // Throw an error that includes the HTTP status for better debugging
-        throw new Error(`[${response.status} ${response.statusText}]: ${errorMessage}`);
+        throw new Error(
+          `[${response.status} ${response.statusText}]: ${errorMessage}`,
+        );
       }
 
       const data = await response.json();

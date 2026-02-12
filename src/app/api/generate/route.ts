@@ -20,18 +20,30 @@ export async function POST(req: Request) {
   try {
     const trimmedUrl = rawUrl?.trim();
     if (!trimmedUrl) {
-      return NextResponse.json({ error: "GitHub URL is required" }, { status: 400 });
+      return NextResponse.json(
+        { error: "GitHub URL is required" },
+        { status: 400 },
+      );
     }
 
     let parsedUrl: URL;
     try {
       parsedUrl = new URL(trimmedUrl);
     } catch {
-      return NextResponse.json({ error: "Please provide a valid URL" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Please provide a valid URL" },
+        { status: 400 },
+      );
     }
 
-    if (parsedUrl.hostname !== "github.com" && parsedUrl.hostname !== "www.github.com") {
-      return NextResponse.json({ error: "Only GitHub URLs are supported" }, { status: 400 });
+    if (
+      parsedUrl.hostname !== "github.com" &&
+      parsedUrl.hostname !== "www.github.com"
+    ) {
+      return NextResponse.json(
+        { error: "Only GitHub URLs are supported" },
+        { status: 400 },
+      );
     }
 
     const pathSegments = parsedUrl.pathname.split("/").filter(Boolean);
@@ -39,31 +51,45 @@ export async function POST(req: Request) {
     const repo = pathSegments[1];
 
     if (!owner || !repo) {
-      return NextResponse.json({ error: "URL must include owner and repository name" }, { status: 400 });
+      return NextResponse.json(
+        { error: "URL must include owner and repository name" },
+        { status: 400 },
+      );
     }
 
     const [repoInfo, repoContents] = await Promise.all([
       getRepoData(owner, repo),
-      getRepoContents(owner, repo)
+      getRepoContents(owner, repo),
     ]);
 
-    const files = Array.isArray(repoContents) ? repoContents.map((f: { name: string }) => f.name) : [];
-    const fileListString = files.length > 0 ? files.join(", ") : "Standard repository structure";
-    
+    const files = Array.isArray(repoContents)
+      ? repoContents.map((f: { name: string }) => f.name)
+      : [];
+    const fileListString =
+      files.length > 0 ? files.join(", ") : "Standard repository structure";
+
     // Tech Stack detection logic
     const hasNode = files.includes("package.json");
-    const hasPython = files.includes("requirements.txt") || files.includes("setup.py");
-    const hasDocker = files.includes("Dockerfile") || files.includes("docker-compose.yml");
+    const hasPython =
+      files.includes("requirements.txt") || files.includes("setup.py");
+    const hasDocker =
+      files.includes("Dockerfile") || files.includes("docker-compose.yml");
 
     // Fix: Cleanly joined Tech Stack labels
-    const stackLabels = [
-      hasNode && "Node.js Environment",
-      hasPython && "Python Environment",
-      hasDocker && "Containerized"
-    ].filter(Boolean).join(", ") || "Generic Software Environment";
+    const stackLabels =
+      [
+        hasNode && "Node.js Environment",
+        hasPython && "Python Environment",
+        hasDocker && "Containerized",
+      ]
+        .filter(Boolean)
+        .join(", ") || "Generic Software Environment";
 
     // Fix: Dynamic License detection
-    const licenseName = repoInfo?.license?.name || repoInfo?.license?.spdx_id || "the repository's license file";
+    const licenseName =
+      repoInfo?.license?.name ||
+      repoInfo?.license?.spdx_id ||
+      "the repository's license file";
 
     const model = getGeminiModel();
 
@@ -122,14 +148,14 @@ export async function POST(req: Request) {
     const markdown = response.text();
 
     return NextResponse.json({ markdown });
-
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Internal Server Error";
+    const message =
+      error instanceof Error ? error.message : "Internal Server Error";
     console.error("README Generation Failed:", message);
 
     return NextResponse.json(
       { error: "Failed to generate README. Check your URL and try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

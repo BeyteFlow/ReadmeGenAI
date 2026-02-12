@@ -32,7 +32,9 @@ export const Hero = () => {
 
         {/* CTA Buttons - Fixed Routing */}
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          <Link href="/generate" className="w-full sm:w-auto"> {/* Changed from "generate" to "/generate" */}
+          <Link href="/generate" className="w-full sm:w-auto">
+            {" "}
+            {/* Changed from "generate" to "/generate" */}
             <Button className="w-full px-10 py-4 text-base shadow-xl shadow-white/5">
               Get Started
               <ArrowRight

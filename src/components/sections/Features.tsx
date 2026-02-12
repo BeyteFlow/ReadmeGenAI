@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface FeatureItem {
   icon: React.ReactNode;
@@ -11,8 +11,8 @@ export const Features = ({ items }: { items: FeatureItem[] }) => (
     <div className="max-w-7xl mx-auto px-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {items.map((feature, idx) => (
-          <div 
-            key={idx} 
+          <div
+            key={idx}
             className="group p-8 rounded-3xl bg-zinc-950 border border-white/5 hover:border-blue-500/50 hover:bg-zinc-900/50 transition-all duration-300 shadow-2xl"
           >
             <div className="mb-6 p-4 rounded-2xl bg-white/5 w-fit group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 text-blue-400">

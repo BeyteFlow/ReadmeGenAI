@@ -67,9 +67,7 @@ export const QuickStart = () => {
                     STEP {s.step}
                   </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-white">
-                  {s.title}
-                </h3>
+                <h3 className="text-xl font-bold mb-3 text-white">{s.title}</h3>
                 <p className="text-zinc-400 text-sm leading-relaxed">
                   {s.desc}
                 </p>

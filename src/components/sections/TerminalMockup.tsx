@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 export const TerminalMockup = () => (
   <div className="mt-20 relative p-px rounded-2xl bg-linear-to-b from-white/20 via-white/5 to-transparent shadow-2xl max-w-4xl mx-auto">
@@ -21,7 +21,7 @@ export const TerminalMockup = () => (
           <span className="text-blue-500 font-bold">➜</span>
           <span className="text-zinc-300">npx readmegenai init</span>
         </div>
-        
+
         <div className="mt-4 space-y-1">
           <p className="text-blue-400 flex items-center gap-2">
             <span className="animate-pulse">●</span> Analyzing codebase...
@@ -29,11 +29,15 @@ export const TerminalMockup = () => (
           {/* UPDATED: Reflecting Next.js 16 as per package.json */}
           <p className="text-zinc-500">✓ Detected Next.js 16 & TailwindCSS</p>
           <p className="text-zinc-500">✓ Parsed 14 API endpoints</p>
-          <p className="text-zinc-500">✓ Metadata successfully pulled from Octokit</p>
+          <p className="text-zinc-500">
+            ✓ Metadata successfully pulled from Octokit
+          </p>
         </div>
 
         <div className="mt-6 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-          <p className="text-emerald-400 font-bold">✨ README.md generated successfully!</p>
+          <p className="text-emerald-400 font-bold">
+            ✨ README.md generated successfully!
+          </p>
         </div>
 
         <div className="mt-6 flex gap-3">

@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
-import rehypeSanitize from 'rehype-sanitize';
-import { Copy, Check, FileCode,  } from 'lucide-react';
+import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
+import { Copy, Check, FileCode } from "lucide-react";
 
 export const MarkdownPreview = ({ content }: { content: string }) => {
-  const [view, setView] = useState<'code' | 'preview'>('preview');
+  const [view, setView] = useState<"code" | "preview">("preview");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -17,7 +17,7 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error);
+      console.error("Failed to copy to clipboard:", error);
       setCopied(false);
     }
   };
@@ -28,26 +28,74 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
     <div className="mt-12 w-full max-w-4xl mx-auto border border-zinc-800 rounded-xl bg-zinc-950 overflow-hidden shadow-2xl">
       <style jsx global>{`
         /* Fix for centered HTML in Markdown */
-        .preview-content [align="center"] { 
-          display: block; 
-          text-align: center; 
-          margin: 0 auto; 
+        .preview-content [align="center"] {
+          display: block;
+          text-align: center;
+          margin: 0 auto;
         }
-        .preview-content [align="center"] img { 
-          display: inline-block; 
-          margin: 0 4px; 
+        .preview-content [align="center"] img {
+          display: inline-block;
+          margin: 0 4px;
         }
-        
+
         /* Typography */
-        .preview-content h1 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1.5rem; color: white; border-bottom: 1px solid #27272a; padding-bottom: 0.5rem; }
-        .preview-content h2 { font-size: 1.5rem; font-weight: 600; margin-top: 2rem; margin-bottom: 1rem; color: #e4e4e7; }
-        .preview-content h3 { font-size: 1.25rem; font-weight: 500; margin-top: 1.5rem; color: #d4d4d8; }
-        .preview-content p { margin-bottom: 1.25rem; color: #a1a1aa; line-height: 1.7; }
-        .preview-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1.25rem; color: #a1a1aa; }
-        .preview-content table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.875rem; }
-        .preview-content th { background: #18181b; padding: 0.75rem; text-align: left; border: 1px solid #27272a; color: white; }
-        .preview-content td { padding: 0.75rem; border: 1px solid #27272a; color: #a1a1aa; }
-        .preview-content code { background: #27272a; padding: 0.2rem 0.4rem; border-radius: 4px; color: #34d399; font-family: monospace; }
+        .preview-content h1 {
+          font-size: 2.25rem;
+          font-weight: 700;
+          margin-bottom: 1.5rem;
+          color: white;
+          border-bottom: 1px solid #27272a;
+          padding-bottom: 0.5rem;
+        }
+        .preview-content h2 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+          color: #e4e4e7;
+        }
+        .preview-content h3 {
+          font-size: 1.25rem;
+          font-weight: 500;
+          margin-top: 1.5rem;
+          color: #d4d4d8;
+        }
+        .preview-content p {
+          margin-bottom: 1.25rem;
+          color: #a1a1aa;
+          line-height: 1.7;
+        }
+        .preview-content ul {
+          list-style-type: disc;
+          margin-left: 1.5rem;
+          margin-bottom: 1.25rem;
+          color: #a1a1aa;
+        }
+        .preview-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1.5rem 0;
+          font-size: 0.875rem;
+        }
+        .preview-content th {
+          background: #18181b;
+          padding: 0.75rem;
+          text-align: left;
+          border: 1px solid #27272a;
+          color: white;
+        }
+        .preview-content td {
+          padding: 0.75rem;
+          border: 1px solid #27272a;
+          color: #a1a1aa;
+        }
+        .preview-content code {
+          background: #27272a;
+          padding: 0.2rem 0.4rem;
+          border-radius: 4px;
+          color: #34d399;
+          font-family: monospace;
+        }
       `}</style>
 
       {/* Header */}
@@ -58,25 +106,40 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
             <span>README.md</span>
           </div>
           <div className="flex p-1 bg-black rounded-lg border border-zinc-800">
-            <button onClick={() => setView('preview')} className={`px-3 py-1 text-xs rounded-md transition ${view === 'preview' ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}>Preview</button>
-            <button onClick={() => setView('code')} className={`px-3 py-1 text-xs rounded-md transition ${view === 'code' ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}>Code</button>
+            <button
+              onClick={() => setView("preview")}
+              className={`px-3 py-1 text-xs rounded-md transition ${view === "preview" ? "bg-zinc-800 text-white" : "text-zinc-500"}`}
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => setView("code")}
+              className={`px-3 py-1 text-xs rounded-md transition ${view === "code" ? "bg-zinc-800 text-white" : "text-zinc-500"}`}
+            >
+              Code
+            </button>
           </div>
         </div>
-        <button onClick={handleCopy} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-2">
+        <button
+          onClick={handleCopy}
+          className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
+        >
           {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? 'Copied' : 'Copy'}
+          {copied ? "Copied" : "Copy"}
         </button>
       </div>
 
       {/* Content */}
       <div className="p-6 md:p-10 min-h-100">
-        {view === 'code' ? (
-          <pre className="text-zinc-500 font-mono text-xs whitespace-pre-wrap leading-relaxed">{content}</pre>
+        {view === "code" ? (
+          <pre className="text-zinc-500 font-mono text-xs whitespace-pre-wrap leading-relaxed">
+            {content}
+          </pre>
         ) : (
           <div className="preview-content">
-            <ReactMarkdown 
-              remarkPlugins={[remarkGfm]} 
-              rehypePlugins={[rehypeRaw, rehypeSanitize]} 
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw, rehypeSanitize]}
             >
               {content}
             </ReactMarkdown>

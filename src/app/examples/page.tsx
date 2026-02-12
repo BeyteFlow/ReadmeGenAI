@@ -52,7 +52,7 @@ const examples = [
 export default function ExamplesPage() {
   const [previewContent, setPreviewContent] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  
+
   // Refs for timeout and accessibility management
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -72,7 +72,7 @@ export default function ExamplesPage() {
       };
 
       window.addEventListener("keydown", handleKeyDown);
-      
+
       return () => {
         document.body.style.overflow = "unset";
         window.removeEventListener("keydown", handleKeyDown);
@@ -83,12 +83,12 @@ export default function ExamplesPage() {
   const handleCopy = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      
+
       // Clear previous timeout if user clicks rapidly
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
       setCopied(true);
-      
+
       // Success path: reset icon after 2 seconds
       timeoutRef.current = setTimeout(() => {
         setCopied(false);
@@ -170,11 +170,11 @@ export default function ExamplesPage() {
 
         {/* --- README PREVIEW MODAL --- */}
         {previewContent && (
-          <div 
+          <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300"
             onClick={() => setPreviewContent(null)} // Close on backdrop click
           >
-            <div 
+            <div
               className="bg-zinc-900 border border-white/10 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
               role="dialog"

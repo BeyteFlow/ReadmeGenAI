@@ -12,7 +12,6 @@
   <img src="https://img.shields.io/github/issues-pr/BeyteFlow/ReadmeGenAI?style=for-the-badge" alt="Open PRs">
 </p>
 
-
 ---
 
 ## The Strategic "Why"
@@ -23,13 +22,12 @@ ReadmeGenAI eliminates this friction by leveraging advanced AI to automatically 
 
 ## Key Features
 
-*   🚀 **Instant Generation**: Create a complete, professional README in seconds, not hours.
-*   ✨ **AI-Powered Quality**: Benefit from intelligently structured and contextually relevant content, ensuring high standards.
-*   ⚙️ **Customizable Output**: Tailor generated READMEs to specific project requirements and branding guidelines.
-*   💾 **Standard Markdown**: Output is always clean, industry-standard Markdown, ready for GitHub and other platforms.
-*   ⏱️ **Time-Saving Workflow**: Reclaim development time by automating a crucial, often tedious, documentation step.
-*   🌐 **Open-Source & Extensible**: A community-driven project that welcomes contributions and further innovation.
-
+- 🚀 **Instant Generation**: Create a complete, professional README in seconds, not hours.
+- ✨ **AI-Powered Quality**: Benefit from intelligently structured and contextually relevant content, ensuring high standards.
+- ⚙️ **Customizable Output**: Tailor generated READMEs to specific project requirements and branding guidelines.
+- 💾 **Standard Markdown**: Output is always clean, industry-standard Markdown, ready for GitHub and other platforms.
+- ⏱️ **Time-Saving Workflow**: Reclaim development time by automating a crucial, often tedious, documentation step.
+- 🌐 **Open-Source & Extensible**: A community-driven project that welcomes contributions and further innovation.
 
 <p align="center">
   <img src="assets/mainpage.png" alt="Main Page" width="600"/>
@@ -44,14 +42,14 @@ ReadmeGenAI is built on a robust, modern web stack designed for performance, sca
 
 ### Tech Stack
 
-| Technology      | Purpose                               | Key Benefit                                 |
-| :-------------- | :------------------------------------ | :------------------------------------------ |
-| **Node.js**     | Server-side JavaScript runtime        | High performance, extensive package ecosystem |
-| **TypeScript**  | Primary programming language          | Type safety, improved code maintainability  |
-| **Next.js**     | React framework for web applications  | SSR, SSG, API routes, optimized performance |
-| **ESLint**      | Pluggable JavaScript linter           | Code quality, consistency, error prevention |
-| **PostCSS**     | CSS pre-processor                     | Enhanced CSS capabilities, modular styling  |
-| **Coderabbit.ai** | AI-powered code review integration | Automated feedback, improved code quality   |
+| Technology        | Purpose                              | Key Benefit                                   |
+| :---------------- | :----------------------------------- | :-------------------------------------------- |
+| **Node.js**       | Server-side JavaScript runtime       | High performance, extensive package ecosystem |
+| **TypeScript**    | Primary programming language         | Type safety, improved code maintainability    |
+| **Next.js**       | React framework for web applications | SSR, SSG, API routes, optimized performance   |
+| **ESLint**        | Pluggable JavaScript linter          | Code quality, consistency, error prevention   |
+| **PostCSS**       | CSS pre-processor                    | Enhanced CSS capabilities, modular styling    |
+| **Coderabbit.ai** | AI-powered code review integration   | Automated feedback, improved code quality     |
 
 ### Directory Structure
 
@@ -81,18 +79,20 @@ Follow these steps to get ReadmeGenAI up and running on your local machine.
 
 Ensure you have the following installed:
 
-*   **Node.js** (LTS version recommended)
-*   **npm**, **yarn**, or **pnpm** (package manager)
+- **Node.js** (LTS version recommended)
+- **npm**, **yarn**, or **pnpm** (package manager)
 
 ### Installation
 
 1.  **Clone the repository**:
+
     ```bash
     git clone https://github.com/your-org/ReadmeGenAI.git
     cd ReadmeGenAI
     ```
 
 2.  **Install dependencies**:
+
     ```bash
     npm install
     # or yarn install
@@ -114,6 +114,7 @@ While not explicitly in the root, Next.js applications commonly use `.env.local`
 
 Create a `.env.local` file in the root of the project if required, following any examples provided (e.g., `.env.example`).
 Example:
+
 ```
 # .env.local
 NEXT_PUBLIC_AI_API_KEY=your_ai_api_key_here
@@ -140,11 +141,12 @@ Please ensure your code adheres to our coding standards and passes all tests. Re
 This project is licensed under the **MIT License**.
 
 The MIT License is a permissive free software license, meaning you are free to:
-*   **Use**: Employ the software for any purpose.
-*   **Modify**: Change the software to suit your needs.
-*   **Distribute**: Share copies of the software.
-*   **Sublicense**: Grant others the right to use, modify, and distribute the software.
-*   **Private Use**: Use the software privately.
+
+- **Use**: Employ the software for any purpose.
+- **Modify**: Change the software to suit your needs.
+- **Distribute**: Share copies of the software.
+- **Sublicense**: Grant others the right to use, modify, and distribute the software.
+- **Private Use**: Use the software privately.
 
 The only conditions are that the license and copyright notice must be included in all copies or substantial portions of the software. The license explicitly states "THE SOFTWARE IS PROVIDED 'AS IS'", meaning there is no warranty of any kind.
 

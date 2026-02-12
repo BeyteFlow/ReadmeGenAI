@@ -14,9 +14,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ReadmeGenAI",
-  description: "REadmeGenAI is an AI-powered tool that automatically generates professional README files for your GitHub projects.",
+  description:
+    "REadmeGenAI is an AI-powered tool that automatically generates professional README files for your GitHub projects.",
   icons: {
-    icon: "/ReadmeGenAI.png", 
+    icon: "/ReadmeGenAI.png",
     shortcut: "/ReadmeGenAI.png",
     apple: "/ReadmeGenAI.png",
   },
