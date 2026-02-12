@@ -4,11 +4,14 @@
 </p>
 
 <p align="center">
-  <img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen" />
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-blue.svg" />
-  <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" />
-  <img alt="GitHub stars" src="https://img.shields.io/github/stars/BeyteFlow/ReadmeGenAI?style=social" />
+  <img src="https://img.shields.io/github/stars/BeyteFlow/ReadmeGenAI?style=for-the-badge" alt="GitHub stars">
+  <img src="https://img.shields.io/github/forks/BeyteFlow/ReadmeGenAI?style=for-the-badge" alt="GitHub forks">
+  <img src="https://img.shields.io/github/issues/BeyteFlow/ReadmeGenAI?style=for-the-badge" alt="GitHub issues">
+  <img src="https://img.shields.io/github/license/BeyteFlow/ReadmeGenAI?style=for-the-badge" alt="GitHub license">
+  <img src="https://img.shields.io/github/actions/workflow/status/BeyteFlow/ReadmeGenAI/ci.yml?style=for-the-badge&label=Build" alt="Build status">
+  <img src="https://img.shields.io/github/issues-pr/BeyteFlow/ReadmeGenAI?style=for-the-badge" alt="Open PRs">
 </p>
+
 
 ---
 
