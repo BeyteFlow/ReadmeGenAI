@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import GeneratePageClient from "@/app/generate/GeneratePageClient";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     repo: string; // e.g., "facebook/react"
-  };
+  }>;
 }
 
 // Dynamic Metadata for SEO and social sharing
@@ -21,7 +21,7 @@ export async function generateMetadata({
     openGraph: {
       title: `README for ${repoDisplayName} | ReadmeGenAI`,
       description: `Generate a polished README.md for ${repoName} using ReadmeGenAI.`,
-      url: `https://readmegen-ai.vercel.app/generate/${repoName}`,
+      url: `/generate/${repoName}`,
       siteName: "ReadmeGenAI",
       images: [
         {
