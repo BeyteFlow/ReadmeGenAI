@@ -6,17 +6,24 @@ import { Button } from "../ui/Button";
 interface SearchInputProps {
   onGenerate: (url: string) => void;
   isLoading: boolean;
+  initialValue?: string; // optional initial value
+  ariaLabel?: string; // optional aria-label for accessibility
 }
 
-export const SearchInput = ({ onGenerate, isLoading }: SearchInputProps) => {
-  const [url, setUrl] = useState("");
+export const SearchInput = ({
+  onGenerate,
+  isLoading,
+  initialValue,
+  ariaLabel,
+}: SearchInputProps) => {
+  // Initialize state directly from initialValue once
+  const [url, setUrl] = useState(initialValue || "");
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Stricter Regex: Matches https://github.com/user/repo
     const githubUrlPattern =
       /^https?:\/\/(www\.)?github\.com\/[\w.-]+\/[\w.-]+\/?$/;
 
@@ -41,7 +48,10 @@ export const SearchInput = ({ onGenerate, isLoading }: SearchInputProps) => {
             if (error) setError(null);
           }}
           placeholder="https://github.com/username/repo"
-          className={`w-full bg-zinc-900/50 border ${error ? "border-red-500/50" : "border-white/10"} rounded-2xl py-6 pl-14 pr-40 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all backdrop-blur-xl`}
+          aria-label={ariaLabel}
+          className={`w-full bg-zinc-900/50 border ${
+            error ? "border-red-500/50" : "border-white/10"
+          } rounded-2xl py-6 pl-14 pr-40 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all backdrop-blur-xl`}
         />
         <div className="absolute inset-y-2 right-2 flex items-center">
           <Button
