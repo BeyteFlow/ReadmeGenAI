@@ -7,12 +7,14 @@ interface SearchInputProps {
   onGenerate: (url: string) => void;
   isLoading: boolean;
   initialValue?: string; // optional initial value
+  ariaLabel?: string; // optional aria-label for accessibility
 }
 
 export const SearchInput = ({
   onGenerate,
   isLoading,
   initialValue,
+  ariaLabel,
 }: SearchInputProps) => {
   // Initialize state directly from initialValue once
   const [url, setUrl] = useState(initialValue || "");
@@ -46,6 +48,7 @@ export const SearchInput = ({
             if (error) setError(null);
           }}
           placeholder="https://github.com/username/repo"
+          aria-label={ariaLabel}
           className={`w-full bg-zinc-900/50 border ${
             error ? "border-red-500/50" : "border-white/10"
           } rounded-2xl py-6 pl-14 pr-40 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all backdrop-blur-xl`}

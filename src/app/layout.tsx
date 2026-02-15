@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     title: "ReadmeGenAI – AI GitHub README Generator",
     description:
       "Automatically generate professional README files from your GitHub repositories using AI.",
-    url: "https://readmegen-ai.vercel.app",
+    url: "/",
     siteName: "ReadmeGenAI",
     images: [
       {
@@ -62,6 +62,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://readmegen-ai.vercel.app";
+
   return (
     <html lang="en">
       <head>
@@ -77,7 +80,7 @@ export default function RootLayout({
               operatingSystem: "Web",
               description:
                 "AI-powered GitHub README generator that creates markdown documentation automatically.",
-              url: "https://readmegen-ai.vercel.app",
+              url: siteUrl,
             }),
           }}
         />
