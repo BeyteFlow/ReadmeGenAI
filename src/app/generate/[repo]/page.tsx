@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import GeneratePageClient from '@/app/generate/GeneratePageClient';
+import GeneratePageClient from "@/app/generate/GeneratePageClient";
 
 interface PageProps {
   params: {
@@ -8,7 +8,9 @@ interface PageProps {
 }
 
 // Dynamic Metadata for SEO and social sharing
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const repoName = resolvedParams.repo; // full repo slug like "facebook/react"
   const repoDisplayName = repoName.split("/").pop(); // e.g., "react"

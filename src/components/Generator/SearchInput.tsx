@@ -9,7 +9,11 @@ interface SearchInputProps {
   initialValue?: string; // optional initial value
 }
 
-export const SearchInput = ({ onGenerate, isLoading, initialValue }: SearchInputProps) => {
+export const SearchInput = ({
+  onGenerate,
+  isLoading,
+  initialValue,
+}: SearchInputProps) => {
   // Initialize state directly from initialValue once
   const [url, setUrl] = useState(initialValue || "");
   const [error, setError] = useState<string | null>(null);

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://readmegen-ai.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://readmegen-ai.vercel.app",
   ),
   title: {
     default: "ReadmeGenAI – AI GitHub README Generator",

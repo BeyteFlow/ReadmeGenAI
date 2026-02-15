@@ -1,6 +1,5 @@
-import GeneratePageClient from './GeneratePageClient';
+import GeneratePageClient from "./GeneratePageClient";
 
 export default function GeneratePage() {
-
   return <GeneratePageClient />;
 }

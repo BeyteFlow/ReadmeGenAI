@@ -43,7 +43,9 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
         } catch {
           errorMessage = errorText || response.statusText;
         }
-        throw new Error(`[${response.status} ${response.statusText}]: ${errorMessage}`);
+        throw new Error(
+          `[${response.status} ${response.statusText}]: ${errorMessage}`,
+        );
       }
 
       const data = await response.json();
@@ -51,7 +53,9 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
         setMarkdown(data.markdown);
       } else {
         setMarkdown("");
-        throw new Error("Invalid response: markdown content is missing or invalid");
+        throw new Error(
+          "Invalid response: markdown content is missing or invalid",
+        );
       }
     } catch (error: unknown) {
       console.error("Generation Error:", error);
