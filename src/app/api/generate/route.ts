@@ -56,11 +56,38 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
+    let repoInfo, repoContents;
+    try {
+      [repoInfo, repoContents] = await Promise.all([
+        getRepoData(owner, repo),
+        getRepoContents(owner, repo),
+      ]);
+    } catch (error: any) {
+      console.error("GitHub API Error:", error.message);
 
-    const [repoInfo, repoContents] = await Promise.all([
-      getRepoData(owner, repo),
-      getRepoContents(owner, repo),
-    ]);
+      // Handle 404 (Not Found / Typos)
+      if (error.status === 404) {
+        return NextResponse.json(
+          { error: "Repository not found. Please check the URL for typos or ensure the repo is public." },
+          { status: 404 }
+        );
+      }
+      
+      // Handle 403 (Rate limits or Private repos)
+      if (error.status === 403) {
+        return NextResponse.json(
+          { error: "Access denied or GitHub API rate limit reached. Try again later." },
+          { status: 403 }
+        );
+      }
+
+      // Generic fallback for other API issues
+      return NextResponse.json(
+        { error: "Unable to reach GitHub. Please verify the repository exists and is accessible." },
+        { status: 400 }
+      );
+    }
+  
 
     const files = Array.isArray(repoContents)
       ? repoContents.map((f: { name: string }) => f.name)
@@ -154,7 +181,7 @@ export async function POST(req: Request) {
     console.error("README Generation Failed:", message);
 
     return NextResponse.json(
-      { error: "Failed to generate README. Check your URL and try again." },
+      { error: "error: AI generation failed. Please try again in a moment." },
       { status: 500 },
     );
   }
