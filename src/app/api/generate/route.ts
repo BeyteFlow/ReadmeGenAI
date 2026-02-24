@@ -57,37 +57,22 @@ export async function POST(req: Request) {
       );
     }
     let repoInfo, repoContents;
-    try {
-      [repoInfo, repoContents] = await Promise.all([
-        getRepoData(owner, repo),
-        getRepoContents(owner, repo),
-      ]);
-    } catch (error: any) {
-      console.error("GitHub API Error:", error.message);
+    [repoInfo, repoContents] = await Promise.all([
+      getRepoData(owner, repo),
+      getRepoContents(owner, repo),
+    ]);
 
-      // Handle 404 (Not Found / Typos)
-      if (error.status === 404) {
-        return NextResponse.json(
-          { error: "Repository not found. Please check the URL for typos or ensure the repo is public." },
-          { status: 404 }
-        );
-      }
-      
-      // Handle 403 (Rate limits or Private repos)
-      if (error.status === 403) {
-        return NextResponse.json(
-          { error: "Access denied or GitHub API rate limit reached. Try again later." },
-          { status: 403 }
-        );
-      }
-
-      // Generic fallback for other API issues
+    // If the Octokit helpers swallow errors and return null/empty results,
+    // handle that case explicitly here instead of relying on try/catch.
+    if (!repoInfo) {
       return NextResponse.json(
-        { error: "Unable to reach GitHub. Please verify the repository exists and is accessible." },
-        { status: 400 }
+        {
+          error:
+            "Unable to fetch repository from GitHub. Please verify the repository exists, is public, and the URL is correct.",
+        },
+        { status: 400 },
       );
     }
-  
 
     const files = Array.isArray(repoContents)
       ? repoContents.map((f: { name: string }) => f.name)
