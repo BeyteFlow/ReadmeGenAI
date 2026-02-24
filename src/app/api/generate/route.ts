@@ -181,7 +181,7 @@ export async function POST(req: Request) {
     console.error("README Generation Failed:", message);
 
     return NextResponse.json(
-      { error: "error: AI generation failed. Please try again in a moment." },
+      { error: "AI generation failed. Please try again in a moment." },
       { status: 500 },
     );
   }
