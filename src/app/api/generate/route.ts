@@ -18,7 +18,6 @@ async function generateStructure(repoData: any) {
   return JSON.parse(res); // ["Introduction", "Features", ...]
 }
 
-
 // STEP 2: Generate each section
 async function generateSection(section: string, repoData: any) {
   const prompt = `
@@ -30,7 +29,6 @@ async function generateSection(section: string, repoData: any) {
 
   return await callAI(prompt);
 }
-
 
 // STEP 3: Combine
 export async function generateReadme(repoData: any) {
