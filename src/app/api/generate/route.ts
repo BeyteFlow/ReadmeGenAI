@@ -4,7 +4,47 @@ import { getRepoData, getRepoContents } from "@/lib/octokit";
 import { SUPPORTED_LANGUAGES } from "@/constants/languages";
 
 export const dynamic = "force-dynamic";
+// STEP 1: Generate structure
+async function generateStructure(repoData: any) {
+  const prompt = `
+  Create a list of README sections for this repository.
+  Return ONLY array of section names.
 
+  Repo:
+  ${JSON.stringify(repoData)}
+  `;
+
+  const res = await callAI(prompt);
+  return JSON.parse(res); // ["Introduction", "Features", ...]
+}
+
+
+// STEP 2: Generate each section
+async function generateSection(section: string, repoData: any) {
+  const prompt = `
+  Generate ONLY the "${section}" section of a README.
+
+  Repo:
+  ${JSON.stringify(repoData)}
+  `;
+
+  return await callAI(prompt);
+}
+
+
+// STEP 3: Combine
+export async function generateReadme(repoData: any) {
+  const sections = await generateStructure(repoData);
+
+  let finalReadme = "";
+
+  for (const section of sections) {
+    const content = await generateSection(section, repoData);
+    finalReadme += `\n## ${section}\n${content}\n`;
+  }
+
+  return finalReadme;
+}
 /**
  * AI README Generation Endpoint
  * Optimized for data accuracy, clean prompt interpolation, and multi-language support.
