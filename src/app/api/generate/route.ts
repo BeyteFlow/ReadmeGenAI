@@ -1,29 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { MultiStepReadmeGenerator } from '@/lib/multi-step-readme-generator';
+import { NextRequest, NextResponse } from "next/server";
+import { MultiStepReadmeGenerator } from "@/lib/multi-step-readme-generator";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Enhanced Multi-Step README Generation Endpoint
- * 
+ *
  * This endpoint uses a sophisticated multi-step approach to generate READMEs:
  * 1. Repository Analysis - Smart analysis with token-conscious filtering
  * 2. Section Planning - Dynamic sections based on project type
  * 3. Section Generation - Individual section generation within token limits
  * 4. Assembly & Validation - Retry logic and fallback mechanisms
- * 
+ *
  * Fixes token limit issues from issue #101 by generating sections individually.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url: githubUrl, language = 'English' } = body;
+    const { url: githubUrl, language = "English" } = body;
 
     // Validate required fields
     if (!githubUrl) {
       return NextResponse.json(
-        { error: 'GitHub URL is required' },
-        { status: 400 }
+        { error: "GitHub URL is required" },
+        { status: 400 },
       );
     }
 
@@ -33,29 +33,29 @@ export async function POST(request: NextRequest) {
       parsedUrl = new URL(githubUrl.trim());
     } catch {
       return NextResponse.json(
-        { error: 'Please provide a valid URL' },
-        { status: 400 }
+        { error: "Please provide a valid URL" },
+        { status: 400 },
       );
     }
 
     if (
-      parsedUrl.hostname !== 'github.com' &&
-      parsedUrl.hostname !== 'www.github.com'
+      parsedUrl.hostname !== "github.com" &&
+      parsedUrl.hostname !== "www.github.com"
     ) {
       return NextResponse.json(
-        { error: 'Only GitHub URLs are supported' },
-        { status: 400 }
+        { error: "Only GitHub URLs are supported" },
+        { status: 400 },
       );
     }
 
-    const pathSegments = parsedUrl.pathname.split('/').filter(Boolean);
+    const pathSegments = parsedUrl.pathname.split("/").filter(Boolean);
     const owner = pathSegments[0];
     const repo = pathSegments[1];
 
     if (!owner || !repo) {
       return NextResponse.json(
-        { error: 'URL must include owner and repository name' },
-        { status: 400 }
+        { error: "URL must include owner and repository name" },
+        { status: 400 },
       );
     }
 
@@ -69,13 +69,13 @@ export async function POST(request: NextRequest) {
         temperature: 0.7,
         concurrentSections: 3, // Generate multiple sections in parallel
         enableContinuation: true, // Enable automatic continuation for truncated content
-      }
+      },
     );
 
     // Generate README with detailed tracking
     const startTime = Date.now();
     console.log(`Starting multi-step README generation for ${githubUrl}`);
-    
+
     const result = await generator.generateReadme(githubUrl);
     const endTime = Date.now();
 
@@ -90,14 +90,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (!result.success) {
-      console.error('README generation failed:', result.errors);
+      console.error("README generation failed:", result.errors);
       return NextResponse.json(
-        { 
-          error: 'Failed to generate README using multi-step pipeline',
+        {
+          error: "Failed to generate README using multi-step pipeline",
           details: result.errors,
           stats: result.stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
         sectionsTotal: result.stats.sectionsTotal,
         tokensUsed: result.stats.tokensUsed,
         timeElapsed: result.stats.timeElapsed,
-        generationMethod: 'multi-step', // Indicate the method used
+        generationMethod: "multi-step", // Indicate the method used
       },
       metadata: {
         name: result.metadata?.name,
@@ -124,15 +124,14 @@ export async function POST(request: NextRequest) {
       },
       warnings: result.errors.length > 0 ? result.errors : undefined,
     });
-
   } catch (error) {
-    console.error('Multi-step README generation API error:', error);
+    console.error("Multi-step README generation API error:", error);
     return NextResponse.json(
-      { 
-        error: 'Internal server error in multi-step README generation',
-        message: error instanceof Error ? error.message : 'Unknown error'
+      {
+        error: "Internal server error in multi-step README generation",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
