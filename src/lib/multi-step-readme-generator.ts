@@ -1,9 +1,9 @@
 /**
  * Multi-Step README Generation Pipeline
- * 
+ *
  * This module provides a robust, section-by-section approach to README generation
  * that solves token limit issues and ensures complete README files.
- * 
+ *
  * Architecture:
  * 1. Repository Analysis - Extract metadata and structure
  * 2. Section Planning - Determine optimal sections based on repo type
@@ -11,8 +11,8 @@
  * 4. Assembly & Validation - Combine sections with retry logic
  */
 
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Octokit } from 'octokit';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { Octokit } from "octokit";
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -52,17 +52,17 @@ export interface TechStackInfo {
   deployment: string[];
 }
 
-export type ProjectType = 
-  | 'web-frontend' 
-  | 'web-backend' 
-  | 'mobile-app' 
-  | 'desktop-app' 
-  | 'library' 
-  | 'cli-tool' 
-  | 'data-science' 
-  | 'devops' 
-  | 'documentation'
-  | 'other';
+export type ProjectType =
+  | "web-frontend"
+  | "web-backend"
+  | "mobile-app"
+  | "desktop-app"
+  | "library"
+  | "cli-tool"
+  | "data-science"
+  | "devops"
+  | "documentation"
+  | "other";
 
 export interface GitHubContentItem {
   name: string;
@@ -87,7 +87,7 @@ export type GitHubContentResponse = GitHubContentItem | GitHubContentItem[];
 export interface ReadmeSection {
   id: string;
   title: string;
-  priority: 'critical' | 'high' | 'medium' | 'low';
+  priority: "critical" | "high" | "medium" | "low";
   order: number;
   estimatedTokens: number;
   dependencies: string[]; // IDs of sections this depends on
@@ -125,7 +125,10 @@ export class RepositoryAnalyzer {
   /**
    * Comprehensive repository analysis including metadata, structure, and tech stack
    */
-  async analyzeRepository(owner: string, repo: string): Promise<{
+  async analyzeRepository(
+    owner: string,
+    repo: string,
+  ): Promise<{
     metadata: RepositoryMetadata;
     structure: RepositoryStructure;
   }> {
@@ -150,9 +153,12 @@ export class RepositoryAnalyzer {
   /**
    * Extract repository metadata with enhanced fields
    */
-  private async getRepositoryMetadata(owner: string, repo: string): Promise<RepositoryMetadata> {
+  private async getRepositoryMetadata(
+    owner: string,
+    repo: string,
+  ): Promise<RepositoryMetadata> {
     const { data } = await this.octokit.rest.repos.get({ owner, repo });
-    
+
     return {
       name: data.name,
       description: data.description || undefined,
@@ -174,7 +180,12 @@ export class RepositoryAnalyzer {
    * Get repository contents with smart filtering to avoid token overflow
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async getRepositoryContents(owner: string, repo: string, path = '', maxDepth = 2): Promise<any[]> {
+  private async getRepositoryContents(
+    owner: string,
+    repo: string,
+    path = "",
+    maxDepth = 2,
+  ): Promise<any[]> {
     try {
       const { data } = await this.octokit.rest.repos.getContent({
         owner,
@@ -188,18 +199,24 @@ export class RepositoryAnalyzer {
 
       // Filter out unimportant files and limit results
       const filteredContents = data
-        .filter(item => this.isRelevantFile(item.name))
+        .filter((item) => this.isRelevantFile(item.name))
         .slice(0, 100); // Prevent token overflow
 
       if (maxDepth > 0) {
         // Recursively get important subdirectories
-        const subdirectories = filteredContents.filter(item => 
-          item.type === 'dir' && this.isImportantDirectory(item.name)
+        const subdirectories = filteredContents.filter(
+          (item) => item.type === "dir" && this.isImportantDirectory(item.name),
         );
 
-        for (const dir of subdirectories.slice(0, 5)) { // Limit subdirectory exploration
+        for (const dir of subdirectories.slice(0, 5)) {
+          // Limit subdirectory exploration
           try {
-            const subContents = await this.getRepositoryContents(owner, repo, dir.path, maxDepth - 1);
+            const subContents = await this.getRepositoryContents(
+              owner,
+              repo,
+              dir.path,
+              maxDepth - 1,
+            );
             for (const item of subContents) {
               filteredContents.push(item);
             }
@@ -221,24 +238,64 @@ export class RepositoryAnalyzer {
    */
   private isRelevantFile(filename: string): boolean {
     const relevantExtensions = [
-      '.md', '.txt', '.json', '.yml', '.yaml', '.toml', '.ini', '.cfg',
-      '.js', '.ts', '.py', '.java', '.go', '.rs', '.cpp', '.c', '.h',
-      '.html', '.css', '.scss', '.vue', '.jsx', '.tsx',
-      '.dockerfile', '.gitignore', '.env.example'
+      ".md",
+      ".txt",
+      ".json",
+      ".yml",
+      ".yaml",
+      ".toml",
+      ".ini",
+      ".cfg",
+      ".js",
+      ".ts",
+      ".py",
+      ".java",
+      ".go",
+      ".rs",
+      ".cpp",
+      ".c",
+      ".h",
+      ".html",
+      ".css",
+      ".scss",
+      ".vue",
+      ".jsx",
+      ".tsx",
+      ".dockerfile",
+      ".gitignore",
+      ".env.example",
     ];
 
     const relevantFiles = [
-      'README', 'LICENSE', 'package.json', 'requirements.txt', 'setup.py',
-      'Dockerfile', 'docker-compose', 'Makefile', 'cargo.toml', 'go.mod',
-      'pom.xml', 'build.gradle', 'composer.json', 'package-lock.json',
-      'yarn.lock', '.env.example', '.gitignore', 'tsconfig.json'
+      "README",
+      "LICENSE",
+      "package.json",
+      "requirements.txt",
+      "setup.py",
+      "Dockerfile",
+      "docker-compose",
+      "Makefile",
+      "cargo.toml",
+      "go.mod",
+      "pom.xml",
+      "build.gradle",
+      "composer.json",
+      "package-lock.json",
+      "yarn.lock",
+      ".env.example",
+      ".gitignore",
+      "tsconfig.json",
     ];
 
     const lowerFilename = filename.toLowerCase();
-    
-    return relevantFiles.some(file => lowerFilename.includes(file.toLowerCase())) ||
-           relevantExtensions.some(ext => lowerFilename.endsWith(ext)) ||
-           lowerFilename.startsWith('.');
+
+    return (
+      relevantFiles.some((file) =>
+        lowerFilename.includes(file.toLowerCase()),
+      ) ||
+      relevantExtensions.some((ext) => lowerFilename.endsWith(ext)) ||
+      lowerFilename.startsWith(".")
+    );
   }
 
   /**
@@ -246,15 +303,32 @@ export class RepositoryAnalyzer {
    */
   private isImportantDirectory(dirname: string): boolean {
     const importantDirs = [
-      'src', 'lib', 'app', 'components', 'pages', 'api', 'utils',
-      'config', 'scripts', 'docs', 'examples', 'test', 'tests',
-      '__tests__', 'spec', 'public', 'assets', 'static'
+      "src",
+      "lib",
+      "app",
+      "components",
+      "pages",
+      "api",
+      "utils",
+      "config",
+      "scripts",
+      "docs",
+      "examples",
+      "test",
+      "tests",
+      "__tests__",
+      "spec",
+      "public",
+      "assets",
+      "static",
     ];
 
     const lowerDirname = dirname.toLowerCase();
-    return importantDirs.includes(lowerDirname) && 
-           !lowerDirname.includes('node_modules') &&
-           !lowerDirname.includes('.git');
+    return (
+      importantDirs.includes(lowerDirname) &&
+      !lowerDirname.includes("node_modules") &&
+      !lowerDirname.includes(".git")
+    );
   }
 
   /**
@@ -262,19 +336,25 @@ export class RepositoryAnalyzer {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private analyzeStructure(contents: any[]): RepositoryStructure {
-    const files = contents.map(item => item.name || item.path).filter(Boolean);
-    
-    const rootFiles = files.filter(file => !file.includes('/'));
-    const directories = [...new Set(
-      files
-        .filter(file => file.includes('/'))
-        .map(file => file.split('/')[0])
-    )];
+    const files = contents
+      .map((item) => item.name || item.path)
+      .filter(Boolean);
+
+    const rootFiles = files.filter((file) => !file.includes("/"));
+    const directories = [
+      ...new Set(
+        files
+          .filter((file) => file.includes("/"))
+          .map((file) => file.split("/")[0]),
+      ),
+    ];
 
     // Categorize files
-    const packageFiles = files.filter(file => this.isPackageFile(file));
-    const configFiles = files.filter(file => this.isConfigFile(file));
-    const documentationFiles = files.filter(file => this.isDocumentationFile(file));
+    const packageFiles = files.filter((file) => this.isPackageFile(file));
+    const configFiles = files.filter((file) => this.isConfigFile(file));
+    const documentationFiles = files.filter((file) =>
+      this.isDocumentationFile(file),
+    );
 
     // Detect tech stack and project type
     const techStack = this.detectTechStack(files);
@@ -293,30 +373,52 @@ export class RepositoryAnalyzer {
 
   private isPackageFile(filename: string): boolean {
     const packageFiles = [
-      'package.json', 'package-lock.json', 'yarn.lock',
-      'requirements.txt', 'setup.py', 'pyproject.toml',
-      'cargo.toml', 'cargo.lock', 'go.mod', 'go.sum',
-      'pom.xml', 'build.gradle', 'composer.json'
+      "package.json",
+      "package-lock.json",
+      "yarn.lock",
+      "requirements.txt",
+      "setup.py",
+      "pyproject.toml",
+      "cargo.toml",
+      "cargo.lock",
+      "go.mod",
+      "go.sum",
+      "pom.xml",
+      "build.gradle",
+      "composer.json",
     ];
-    return packageFiles.some(file => filename.toLowerCase().includes(file));
+    return packageFiles.some((file) => filename.toLowerCase().includes(file));
   }
 
   private isConfigFile(filename: string): boolean {
     const configFiles = [
-      'tsconfig', 'webpack', 'babel', 'eslint', 'prettier',
-      'jest', 'cypress', 'dockerfile', 'docker-compose',
-      '.env', 'config', 'settings'
+      "tsconfig",
+      "webpack",
+      "babel",
+      "eslint",
+      "prettier",
+      "jest",
+      "cypress",
+      "dockerfile",
+      "docker-compose",
+      ".env",
+      "config",
+      "settings",
     ];
-    return configFiles.some(config => filename.toLowerCase().includes(config));
+    return configFiles.some((config) =>
+      filename.toLowerCase().includes(config),
+    );
   }
 
   private isDocumentationFile(filename: string): boolean {
     const lowerFilename = filename.toLowerCase();
-    return lowerFilename.includes('readme') ||
-           lowerFilename.includes('docs') ||
-           lowerFilename.includes('license') ||
-           lowerFilename.endsWith('.md') ||
-           lowerFilename.endsWith('.txt');
+    return (
+      lowerFilename.includes("readme") ||
+      lowerFilename.includes("docs") ||
+      lowerFilename.includes("license") ||
+      lowerFilename.endsWith(".md") ||
+      lowerFilename.endsWith(".txt")
+    );
   }
 
   /**
@@ -324,7 +426,7 @@ export class RepositoryAnalyzer {
    */
   private detectTechStack(files: string[]): TechStackInfo {
     const techStack: TechStackInfo = {
-      primary: 'unknown',
+      primary: "unknown",
       frameworks: [],
       tools: [],
       databases: [],
@@ -333,23 +435,27 @@ export class RepositoryAnalyzer {
 
     // Primary language detection
     const languageIndicators = {
-      javascript: ['package.json', '.js', '.jsx'],
-      typescript: ['tsconfig.json', '.ts', '.tsx'],
-      python: ['requirements.txt', 'setup.py', '.py'],
-      java: ['pom.xml', 'build.gradle', '.java'],
-      go: ['go.mod', '.go'],
-      rust: ['cargo.toml', '.rs'],
-      cpp: ['.cpp', '.c', '.h'],
-      csharp: ['.cs', '.csproj'],
-      php: ['composer.json', '.php'],
-      ruby: ['gemfile', '.rb'],
-      swift: ['.swift', 'package.swift'],
+      javascript: ["package.json", ".js", ".jsx"],
+      typescript: ["tsconfig.json", ".ts", ".tsx"],
+      python: ["requirements.txt", "setup.py", ".py"],
+      java: ["pom.xml", "build.gradle", ".java"],
+      go: ["go.mod", ".go"],
+      rust: ["cargo.toml", ".rs"],
+      cpp: [".cpp", ".c", ".h"],
+      csharp: [".cs", ".csproj"],
+      php: ["composer.json", ".php"],
+      ruby: ["gemfile", ".rb"],
+      swift: [".swift", "package.swift"],
     };
 
     let maxScore = 0;
     for (const [lang, indicators] of Object.entries(languageIndicators)) {
-      const score = indicators.reduce((sum, indicator) => 
-        sum + files.filter(f => f.toLowerCase().includes(indicator.toLowerCase())).length, 0
+      const score = indicators.reduce(
+        (sum, indicator) =>
+          sum +
+          files.filter((f) => f.toLowerCase().includes(indicator.toLowerCase()))
+            .length,
+        0,
       );
       if (score > maxScore) {
         maxScore = score;
@@ -359,43 +465,51 @@ export class RepositoryAnalyzer {
 
     // Framework detection
     const frameworkIndicators = {
-      react: ['react', 'jsx', 'tsx'],
-      vue: ['vue.config', '.vue'],
-      angular: ['angular.json', '@angular'],
-      svelte: ['svelte.config', '.svelte'],
-      nextjs: ['next.config', 'pages/', 'app/'],
-      nuxt: ['nuxt.config'],
-      express: ['express'],
-      django: ['django', 'manage.py'],
-      fastapi: ['fastapi'],
-      flask: ['flask'],
-      spring: ['spring', 'application.properties'],
+      react: ["react", "jsx", "tsx"],
+      vue: ["vue.config", ".vue"],
+      angular: ["angular.json", "@angular"],
+      svelte: ["svelte.config", ".svelte"],
+      nextjs: ["next.config", "pages/", "app/"],
+      nuxt: ["nuxt.config"],
+      express: ["express"],
+      django: ["django", "manage.py"],
+      fastapi: ["fastapi"],
+      flask: ["flask"],
+      spring: ["spring", "application.properties"],
     };
 
     for (const [framework, indicators] of Object.entries(frameworkIndicators)) {
-      if (indicators.some(indicator => 
-        files.some(file => file.toLowerCase().includes(indicator.toLowerCase()))
-      )) {
+      if (
+        indicators.some((indicator) =>
+          files.some((file) =>
+            file.toLowerCase().includes(indicator.toLowerCase()),
+          ),
+        )
+      ) {
         techStack.frameworks.push(framework);
       }
     }
 
     // Tool detection
     const toolIndicators = {
-      webpack: ['webpack.config'],
-      vite: ['vite.config'],
-      eslint: ['.eslintrc', 'eslint.config'],
-      prettier: ['.prettierrc', 'prettier.config'],
-      jest: ['jest.config', 'jest.json'],
-      cypress: ['cypress.config', 'cypress/'],
-      docker: ['dockerfile', 'docker-compose'],
-      github_actions: ['.github/workflows'],
+      webpack: ["webpack.config"],
+      vite: ["vite.config"],
+      eslint: [".eslintrc", "eslint.config"],
+      prettier: [".prettierrc", "prettier.config"],
+      jest: ["jest.config", "jest.json"],
+      cypress: ["cypress.config", "cypress/"],
+      docker: ["dockerfile", "docker-compose"],
+      github_actions: [".github/workflows"],
     };
 
     for (const [tool, indicators] of Object.entries(toolIndicators)) {
-      if (indicators.some(indicator => 
-        files.some(file => file.toLowerCase().includes(indicator.toLowerCase()))
-      )) {
+      if (
+        indicators.some((indicator) =>
+          files.some((file) =>
+            file.toLowerCase().includes(indicator.toLowerCase()),
+          ),
+        )
+      ) {
         techStack.tools.push(tool);
       }
     }
@@ -406,70 +520,119 @@ export class RepositoryAnalyzer {
   /**
    * Detect project type based on structure and tech stack
    */
-  private detectProjectType(files: string[], directories: string[], techStack: TechStackInfo): ProjectType {
-    const hasDirectory = (names: string[]) => 
-      names.some(name => directories.some(dir => dir.toLowerCase().includes(name.toLowerCase())));
+  private detectProjectType(
+    files: string[],
+    directories: string[],
+    techStack: TechStackInfo,
+  ): ProjectType {
+    const hasDirectory = (names: string[]) =>
+      names.some((name) =>
+        directories.some((dir) =>
+          dir.toLowerCase().includes(name.toLowerCase()),
+        ),
+      );
 
     const hasFile = (patterns: string[]) =>
-      patterns.some(pattern => files.some(file => file.toLowerCase().includes(pattern.toLowerCase())));
+      patterns.some((pattern) =>
+        files.some((file) =>
+          file.toLowerCase().includes(pattern.toLowerCase()),
+        ),
+      );
 
     // CLI tool detection
-    if (hasFile(['bin/', 'cli.', 'command.', 'main.']) || 
-        techStack.frameworks.length === 0 && hasFile(['index.js', 'main.py', 'main.go'])) {
-      return 'cli-tool';
+    if (
+      hasFile(["bin/", "cli.", "command.", "main."]) ||
+      (techStack.frameworks.length === 0 &&
+        hasFile(["index.js", "main.py", "main.go"]))
+    ) {
+      return "cli-tool";
     }
 
     // Mobile app detection
-    if (hasFile(['react-native', 'flutter', 'ionic', 'expo']) ||
-        hasDirectory(['ios', 'android', 'mobile'])) {
-      return 'mobile-app';
+    if (
+      hasFile(["react-native", "flutter", "ionic", "expo"]) ||
+      hasDirectory(["ios", "android", "mobile"])
+    ) {
+      return "mobile-app";
     }
 
     // Desktop app detection
-    if (hasFile(['electron', 'tauri', 'nwjs']) ||
-        techStack.frameworks.some(f => ['electron', 'tauri'].includes(f))) {
-      return 'desktop-app';
+    if (
+      hasFile(["electron", "tauri", "nwjs"]) ||
+      techStack.frameworks.some((f) => ["electron", "tauri"].includes(f))
+    ) {
+      return "desktop-app";
     }
 
     // Web frontend detection
-    if (techStack.frameworks.some(f => ['react', 'vue', 'angular', 'svelte'].includes(f)) ||
-        hasDirectory(['components', 'pages', 'views']) ||
-        hasFile(['index.html', 'app.js', 'main.js'])) {
-      return 'web-frontend';
+    if (
+      techStack.frameworks.some((f) =>
+        ["react", "vue", "angular", "svelte"].includes(f),
+      ) ||
+      hasDirectory(["components", "pages", "views"]) ||
+      hasFile(["index.html", "app.js", "main.js"])
+    ) {
+      return "web-frontend";
     }
 
     // Web backend detection
-    if (techStack.frameworks.some(f => ['express', 'django', 'flask', 'spring'].includes(f)) ||
-        hasDirectory(['api', 'routes', 'controllers', 'models']) ||
-        hasFile(['server.', 'app.py', 'main.py'])) {
-      return 'web-backend';
+    if (
+      techStack.frameworks.some((f) =>
+        ["express", "django", "flask", "spring"].includes(f),
+      ) ||
+      hasDirectory(["api", "routes", "controllers", "models"]) ||
+      hasFile(["server.", "app.py", "main.py"])
+    ) {
+      return "web-backend";
     }
 
     // Library detection
-    if (hasFile(['lib/', 'src/lib', 'dist/', 'build/', 'setup.py', 'package.json']) &&
-        !hasDirectory(['pages', 'components', 'views'])) {
-      return 'library';
+    if (
+      hasFile([
+        "lib/",
+        "src/lib",
+        "dist/",
+        "build/",
+        "setup.py",
+        "package.json",
+      ]) &&
+      !hasDirectory(["pages", "components", "views"])
+    ) {
+      return "library";
     }
 
     // Data science detection
-    if (hasFile(['jupyter', '.ipynb', 'requirements.txt']) &&
-        techStack.primary === 'python') {
-      return 'data-science';
+    if (
+      hasFile(["jupyter", ".ipynb", "requirements.txt"]) &&
+      techStack.primary === "python"
+    ) {
+      return "data-science";
     }
 
     // DevOps detection
-    if (hasFile(['dockerfile', 'docker-compose', 'kubernetes', 'terraform', '.yml', '.yaml']) ||
-        hasDirectory(['k8s', 'kubernetes', 'terraform', 'ansible'])) {
-      return 'devops';
+    if (
+      hasFile([
+        "dockerfile",
+        "docker-compose",
+        "kubernetes",
+        "terraform",
+        ".yml",
+        ".yaml",
+      ]) ||
+      hasDirectory(["k8s", "kubernetes", "terraform", "ansible"])
+    ) {
+      return "devops";
     }
 
     // Documentation detection
-    if (hasDirectory(['docs', 'documentation']) &&
-        files.filter(f => f.endsWith('.md')).length > 3) {
-      return 'documentation';
+    if (
+      hasDirectory(["docs", "documentation"]) &&
+      files.filter((f) => f.endsWith(".md")).length > 3
+    ) {
+      return "documentation";
     }
 
-    return 'other';
+    return "other";
   }
 }
 
@@ -482,54 +645,54 @@ export class SectionPlanner {
    * Plan README sections based on repository analysis
    */
   static planSections(
-    metadata: RepositoryMetadata, 
-    structure: RepositoryStructure
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
   ): ReadmeSection[] {
     const baseSections: ReadmeSection[] = [
       {
-        id: 'header',
-        title: 'Project Header',
-        priority: 'critical',
+        id: "header",
+        title: "Project Header",
+        priority: "critical",
         order: 1,
         estimatedTokens: 200,
         dependencies: [],
       },
       {
-        id: 'description',
-        title: 'Description',
-        priority: 'critical',
+        id: "description",
+        title: "Description",
+        priority: "critical",
         order: 2,
         estimatedTokens: 300,
-        dependencies: ['header'],
+        dependencies: ["header"],
       },
       {
-        id: 'features',
-        title: 'Features',
-        priority: 'high',
+        id: "features",
+        title: "Features",
+        priority: "high",
         order: 3,
         estimatedTokens: 400,
-        dependencies: ['description'],
+        dependencies: ["description"],
       },
       {
-        id: 'installation',
-        title: 'Installation',
-        priority: 'critical',
+        id: "installation",
+        title: "Installation",
+        priority: "critical",
         order: 4,
         estimatedTokens: 500,
-        dependencies: ['features'],
+        dependencies: ["features"],
       },
       {
-        id: 'usage',
-        title: 'Usage',
-        priority: 'high',
+        id: "usage",
+        title: "Usage",
+        priority: "high",
         order: 5,
         estimatedTokens: 600,
-        dependencies: ['installation'],
+        dependencies: ["installation"],
       },
       {
-        id: 'license',
-        title: 'License',
-        priority: 'medium',
+        id: "license",
+        title: "License",
+        priority: "medium",
         order: 10,
         estimatedTokens: 100,
         dependencies: [],
@@ -537,10 +700,13 @@ export class SectionPlanner {
     ];
 
     // Add conditional sections based on project type and structure
-    const conditionalSections = this.getConditionalSections(metadata, structure);
-    
+    const conditionalSections = this.getConditionalSections(
+      metadata,
+      structure,
+    );
+
     const allSections = [...baseSections, ...conditionalSections];
-    
+
     // Sort by order and return
     return allSections.sort((a, b) => a.order - b.order);
   }
@@ -550,53 +716,55 @@ export class SectionPlanner {
    */
   private static getConditionalSections(
     metadata: RepositoryMetadata,
-    structure: RepositoryStructure
+    structure: RepositoryStructure,
   ): ReadmeSection[] {
     const sections: ReadmeSection[] = [];
 
     // API Documentation for backend projects
-    if (structure.projectType === 'web-backend' || 
-        structure.directories.some(d => d.includes('api'))) {
+    if (
+      structure.projectType === "web-backend" ||
+      structure.directories.some((d) => d.includes("api"))
+    ) {
       sections.push({
-        id: 'api',
-        title: 'API Documentation',
-        priority: 'high',
+        id: "api",
+        title: "API Documentation",
+        priority: "high",
         order: 6,
         estimatedTokens: 800,
-        dependencies: ['usage'],
+        dependencies: ["usage"],
       });
     }
 
     // Configuration section for complex projects
     if (structure.configFiles.length > 3) {
       sections.push({
-        id: 'configuration',
-        title: 'Configuration',
-        priority: 'medium',
+        id: "configuration",
+        title: "Configuration",
+        priority: "medium",
         order: 7,
         estimatedTokens: 400,
-        dependencies: ['installation'],
+        dependencies: ["installation"],
       });
     }
 
     // Development section for open-source projects
     if (!metadata.isPrivate && metadata.forks > 0) {
       sections.push({
-        id: 'development',
-        title: 'Development',
-        priority: 'medium',
+        id: "development",
+        title: "Development",
+        priority: "medium",
         order: 8,
         estimatedTokens: 500,
-        dependencies: ['usage'],
+        dependencies: ["usage"],
       });
     }
 
     // Contributing section for popular projects
     if (metadata.stars > 50 || metadata.forks > 10) {
       sections.push({
-        id: 'contributing',
-        title: 'Contributing',
-        priority: 'medium',
+        id: "contributing",
+        title: "Contributing",
+        priority: "medium",
         order: 9,
         estimatedTokens: 300,
         dependencies: [],
@@ -604,40 +772,49 @@ export class SectionPlanner {
     }
 
     // Deployment section for web applications
-    if (structure.projectType === 'web-frontend' || structure.projectType === 'web-backend') {
+    if (
+      structure.projectType === "web-frontend" ||
+      structure.projectType === "web-backend"
+    ) {
       sections.push({
-        id: 'deployment',
-        title: 'Deployment',
-        priority: 'medium',
+        id: "deployment",
+        title: "Deployment",
+        priority: "medium",
         order: 6.5,
         estimatedTokens: 400,
-        dependencies: ['usage'],
+        dependencies: ["usage"],
       });
     }
 
     // Examples section for libraries
-    if (structure.projectType === 'library' || 
-        structure.directories.some(d => d.includes('example'))) {
+    if (
+      structure.projectType === "library" ||
+      structure.directories.some((d) => d.includes("example"))
+    ) {
       sections.push({
-        id: 'examples',
-        title: 'Examples',
-        priority: 'high',
+        id: "examples",
+        title: "Examples",
+        priority: "high",
         order: 5.5,
         estimatedTokens: 600,
-        dependencies: ['usage'],
+        dependencies: ["usage"],
       });
     }
 
     // Testing section for projects with test infrastructure
-    if (structure.directories.some(d => d.includes('test')) ||
-        structure.techStack.tools.some(t => ['jest', 'cypress', 'pytest'].includes(t))) {
+    if (
+      structure.directories.some((d) => d.includes("test")) ||
+      structure.techStack.tools.some((t) =>
+        ["jest", "cypress", "pytest"].includes(t),
+      )
+    ) {
       sections.push({
-        id: 'testing',
-        title: 'Testing',
-        priority: 'low',
+        id: "testing",
+        title: "Testing",
+        priority: "low",
         order: 8.5,
         estimatedTokens: 300,
-        dependencies: ['development'],
+        dependencies: ["development"],
       });
     }
 
@@ -655,7 +832,9 @@ export class SectionPlanner {
 
     const visit = (section: ReadmeSection) => {
       if (visiting.has(section.id)) {
-        throw new Error(`Circular dependency detected involving section: ${section.id}`);
+        throw new Error(
+          `Circular dependency detected involving section: ${section.id}`,
+        );
       }
       if (visited.has(section.id)) {
         return;
@@ -665,7 +844,7 @@ export class SectionPlanner {
 
       // Visit dependencies first
       for (const depId of section.dependencies) {
-        const depSection = sections.find(s => s.id === depId);
+        const depSection = sections.find((s) => s.id === depId);
         if (depSection) {
           visit(depSection);
         }
@@ -679,7 +858,8 @@ export class SectionPlanner {
     // Sort by priority first, then by order
     const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
     const sortedByPriority = [...sections].sort((a, b) => {
-      const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+      const priorityDiff =
+        priorityOrder[a.priority] - priorityOrder[b.priority];
       return priorityDiff !== 0 ? priorityDiff : a.order - b.order;
     });
 
@@ -720,40 +900,54 @@ export class SectionGenerator {
     sectionId: string,
     metadata: RepositoryMetadata,
     structure: RepositoryStructure,
-    context: Record<string, string> = {}
+    context: Record<string, string> = {},
   ): Promise<GenerationResult> {
-    const prompt = this.buildSectionPrompt(sectionId, metadata, structure, context);
-    
+    const prompt = this.buildSectionPrompt(
+      sectionId,
+      metadata,
+      structure,
+      context,
+    );
+
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
       try {
         const result = await this.callAI(prompt, sectionId);
-        
+
         if (result.success && !result.truncated) {
           return result;
         }
 
         // If truncated and continuation is enabled, try to complete
-        if (result.truncated && this.config.enableContinuation && result.content) {
+        if (
+          result.truncated &&
+          this.config.enableContinuation &&
+          result.content
+        ) {
           const continuationResult = await this.continueGeneration(
-            sectionId, 
-            result.content, 
-            metadata, 
-            structure
+            sectionId,
+            result.content,
+            metadata,
+            structure,
           );
           if (continuationResult.success) {
             return {
               success: true,
               content: result.content + continuationResult.content,
-              tokensUsed: (result.tokensUsed || 0) + (continuationResult.tokensUsed || 0),
+              tokensUsed:
+                (result.tokensUsed || 0) + (continuationResult.tokensUsed || 0),
             };
           }
         }
 
-        console.warn(`Section ${sectionId} generation attempt ${attempt} failed or truncated`);
-        
+        console.warn(
+          `Section ${sectionId} generation attempt ${attempt} failed or truncated`,
+        );
       } catch (error) {
-        console.error(`Section ${sectionId} generation attempt ${attempt} error:`, error);
-        
+        console.error(
+          `Section ${sectionId} generation attempt ${attempt} error:`,
+          error,
+        );
+
         if (attempt === this.config.maxRetries) {
           return {
             success: false,
@@ -776,7 +970,7 @@ export class SectionGenerator {
     sectionId: string,
     metadata: RepositoryMetadata,
     structure: RepositoryStructure,
-    context: Record<string, string>
+    context: Record<string, string>,
   ): string {
     const baseContext = this.buildBaseContext(metadata, structure);
     const contextInfo = Object.keys(context).length > 0 
@@ -786,7 +980,6 @@ export class SectionGenerator {
       : '';
     
     const sectionPrompts: Record<string, string> = {
-      
       header: `Generate a professional README header section for "${metadata.name}".
 
 Context: ${baseContext}${contextInfo}
@@ -816,7 +1009,7 @@ Return only the markdown content.`,
       features: `Generate a features section for "${metadata.name}".
 
 Context: ${baseContext}
-Tech Stack: ${structure.techStack.primary}, ${structure.techStack.frameworks.join(', ')}
+Tech Stack: ${structure.techStack.primary}, ${structure.techStack.frameworks.join(", ")}
 
 Requirements:
 - 5-8 key features
@@ -830,7 +1023,7 @@ Return only the markdown content.`,
       installation: `Generate installation instructions for "${metadata.name}".
 
 Context: ${baseContext}
-Package Files: ${structure.packageFiles.join(', ')}
+Package Files: ${structure.packageFiles.join(", ")}
 Tech Stack: ${structure.techStack.primary}
 
 Requirements:
@@ -872,7 +1065,7 @@ Return only the markdown content.`,
       configuration: `Generate configuration section for "${metadata.name}".
 
 Context: ${baseContext}
-Config Files: ${structure.configFiles.join(', ')}
+Config Files: ${structure.configFiles.join(", ")}
 
 Requirements:
 - Configuration options
@@ -939,7 +1132,7 @@ Return only the markdown content.`,
       testing: `Generate testing section for "${metadata.name}".
 
 Context: ${baseContext}
-Tools: ${structure.techStack.tools.join(', ')}
+Tools: ${structure.techStack.tools.join(", ")}
 
 Requirements:
 - How to run tests
@@ -953,7 +1146,7 @@ Return only the markdown content.`,
       license: `Generate license section for "${metadata.name}".
 
 Context: ${baseContext}
-License: ${metadata.license || 'Not specified'}
+License: ${metadata.license || "Not specified"}
 
 Requirements:
 - License information
@@ -964,21 +1157,27 @@ Requirements:
 Return only the markdown content.`,
     };
 
-    return sectionPrompts[sectionId] || this.buildGenericSectionPrompt(sectionId, metadata, structure);
+    return (
+      sectionPrompts[sectionId] ||
+      this.buildGenericSectionPrompt(sectionId, metadata, structure)
+    );
   }
 
   /**
    * Build base context string to avoid repetition
    */
-  private buildBaseContext(metadata: RepositoryMetadata, structure: RepositoryStructure): string {
+  private buildBaseContext(
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
+  ): string {
     return `
 Repository: ${metadata.name}
-Description: ${metadata.description || 'No description provided'}
-Language: ${metadata.language || 'Multiple'}
+Description: ${metadata.description || "No description provided"}
+Language: ${metadata.language || "Multiple"}
 Stars: ${metadata.stars}
 Project Type: ${structure.projectType}
 Primary Tech: ${structure.techStack.primary}
-Frameworks: ${structure.techStack.frameworks.join(', ') || 'None'}
+Frameworks: ${structure.techStack.frameworks.join(", ") || "None"}
 `.trim();
   }
 
@@ -988,7 +1187,7 @@ Frameworks: ${structure.techStack.frameworks.join(', ') || 'None'}
   private buildGenericSectionPrompt(
     sectionId: string,
     metadata: RepositoryMetadata,
-    structure: RepositoryStructure
+    structure: RepositoryStructure,
   ): string {
     return `Generate a "${sectionId}" section for the repository "${metadata.name}".
 
@@ -1010,7 +1209,7 @@ Return only the markdown content.`;
     sectionId: string,
     partialContent: string,
     metadata: RepositoryMetadata,
-    structure: RepositoryStructure
+    structure: RepositoryStructure,
   ): Promise<GenerationResult> {
     const prompt = `Continue the following "${sectionId}" section for "${metadata.name}":
 
@@ -1027,10 +1226,13 @@ Return only the continuation content.`;
   /**
    * Call AI model with proper error handling and token management
    */
-  private async callAI(prompt: string, sectionId: string): Promise<GenerationResult> {
+  private async callAI(
+    prompt: string,
+    sectionId: string,
+  ): Promise<GenerationResult> {
     try {
       const model = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-pro',
+        model: "gemini-1.5-pro",
         generationConfig: {
           temperature: this.config.temperature,
           topP: 0.95,
@@ -1051,7 +1253,6 @@ Return only the continuation content.`;
         tokensUsed: this.estimateTokens(prompt + content),
         truncated,
       };
-
     } catch (error) {
       return {
         success: false,
@@ -1065,30 +1266,31 @@ Return only the continuation content.`;
    */
   private isResponseTruncated(content: string, sectionId: string): boolean {
     const truncationIndicators = [
-      '...',
-      'truncated',
-      'continued',
-      '[end of response]',
+      "...",
+      "truncated",
+      "continued",
+      "[end of response]",
     ];
 
     const contentLower = content.toLowerCase();
-    const hasIndicators = truncationIndicators.some(indicator => 
-      contentLower.includes(indicator)
+    const hasIndicators = truncationIndicators.some((indicator) =>
+      contentLower.includes(indicator),
     );
 
     // Check if content ends abruptly without proper markdown closure
-    const endsAbruptly = !content.trim().endsWith('.') && 
-                        !content.trim().endsWith('\n') &&
-                        content.length > 100;
+    const endsAbruptly =
+      !content.trim().endsWith(".") &&
+      !content.trim().endsWith("\n") &&
+      content.length > 100;
 
     // Section-specific checks
     const sectionChecks: Record<string, boolean> = {
-      installation: !content.includes('```') && content.length > 200,
-      usage: !content.includes('```') && content.length > 200,
-      api: !content.includes('```') && content.length > 300,
+      installation: !content.includes("```") && content.length > 200,
+      usage: !content.includes("```") && content.length > 200,
+      api: !content.includes("```") && content.length > 300,
     };
 
-    return hasIndicators || endsAbruptly || (sectionChecks[sectionId] || false);
+    return hasIndicators || endsAbruptly || sectionChecks[sectionId] || false;
   }
 
   /**
@@ -1108,7 +1310,10 @@ export class ReadmeAssembler {
   private sectionGenerator: SectionGenerator;
   private config: GenerationConfig;
 
-  constructor(sectionGenerator: SectionGenerator, config: Partial<GenerationConfig> = {}) {
+  constructor(
+    sectionGenerator: SectionGenerator,
+    config: Partial<GenerationConfig> = {},
+  ) {
     this.sectionGenerator = sectionGenerator;
     this.config = {
       maxRetries: 3,
@@ -1126,7 +1331,7 @@ export class ReadmeAssembler {
   async generateCompleteReadme(
     metadata: RepositoryMetadata,
     structure: RepositoryStructure,
-    customSections?: ReadmeSection[]
+    customSections?: ReadmeSection[],
   ): Promise<{
     success: boolean;
     readme?: string;
@@ -1136,7 +1341,8 @@ export class ReadmeAssembler {
     tokensUsed: number;
   }> {
     // Plan sections
-    const sections = customSections || SectionPlanner.planSections(metadata, structure);
+    const sections =
+      customSections || SectionPlanner.planSections(metadata, structure);
     const optimizedSections = SectionPlanner.optimizeSectionOrder(sections);
 
     const results: Record<string, GenerationResult> = {};
@@ -1149,18 +1355,20 @@ export class ReadmeAssembler {
       metadata,
       structure,
       results,
-      errors
+      errors,
     );
 
     // Calculate tokens used
     totalTokens = Object.values(results).reduce(
-      (sum, result) => sum + (result.tokensUsed || 0), 
-      0
+      (sum, result) => sum + (result.tokensUsed || 0),
+      0,
     );
 
     // Assemble final README
     const readme = this.assembleReadme(optimizedSections, results);
-    const successfulSections = Object.values(results).filter(r => r.success).length;
+    const successfulSections = Object.values(results).filter(
+      (r) => r.success,
+    ).length;
 
     return {
       success: successfulSections > 0,
@@ -1180,13 +1388,15 @@ export class ReadmeAssembler {
     metadata: RepositoryMetadata,
     structure: RepositoryStructure,
     results: Record<string, GenerationResult>,
-    errors: string[]
+    errors: string[],
   ): Promise<void> {
     const batches = this.createSectionBatches(sections);
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
       const batch = batches[batchIndex];
-      console.log(`Generating batch ${batchIndex + 1}/${batches.length} with sections: ${batch.map(s => s.id).join(', ')}`);
+      console.log(
+        `Generating batch ${batchIndex + 1}/${batches.length} with sections: ${batch.map((s) => s.id).join(", ")}`,
+      );
 
       // Generate sections in current batch concurrently
       const batchPromises = batch.map(async (section) => {
@@ -1195,11 +1405,11 @@ export class ReadmeAssembler {
           section.id,
           metadata,
           structure,
-          context
+          context,
         );
-        
+
         results[section.id] = result;
-        
+
         if (!result.success) {
           errors.push(`Failed to generate ${section.id}: ${result.error}`);
         }
@@ -1216,7 +1426,13 @@ export class ReadmeAssembler {
     }
 
     // Retry failed critical sections
-    await this.retryFailedCriticalSections(sections, metadata, structure, results, errors);
+    await this.retryFailedCriticalSections(
+      sections,
+      metadata,
+      structure,
+      results,
+      errors,
+    );
   }
 
   /**
@@ -1231,12 +1447,19 @@ export class ReadmeAssembler {
       const currentBatch: ReadmeSection[] = [];
       const toRemove: number[] = [];
 
-      for (let i = 0; i < remaining.length && currentBatch.length < this.config.concurrentSections; i++) {
+      for (
+        let i = 0;
+        i < remaining.length &&
+        currentBatch.length < this.config.concurrentSections;
+        i++
+      ) {
         const section = remaining[i];
-        
+
         // Check if dependencies are satisfied
-        const dependenciesSatisfied = section.dependencies.every(depId => processed.has(depId));
-        
+        const dependenciesSatisfied = section.dependencies.every((depId) =>
+          processed.has(depId),
+        );
+
         if (dependenciesSatisfied) {
           currentBatch.push(section);
           processed.add(section.id);
@@ -1268,7 +1491,7 @@ export class ReadmeAssembler {
    */
   private buildSectionContext(
     section: ReadmeSection,
-    results: Record<string, GenerationResult>
+    results: Record<string, GenerationResult>,
   ): Record<string, string> {
     const context: Record<string, string> = {};
 
@@ -1290,18 +1513,21 @@ export class ReadmeAssembler {
     metadata: RepositoryMetadata,
     structure: RepositoryStructure,
     results: Record<string, GenerationResult>,
-    errors: string[]
+    errors: string[],
   ): Promise<void> {
     const failedCriticalSections = sections.filter(
-      section => section.priority === 'critical' && 
-                 (!results[section.id] || !results[section.id].success)
+      (section) =>
+        section.priority === "critical" &&
+        (!results[section.id] || !results[section.id].success),
     );
 
     if (failedCriticalSections.length === 0) {
       return;
     }
 
-    console.log(`Retrying ${failedCriticalSections.length} failed critical sections...`);
+    console.log(
+      `Retrying ${failedCriticalSections.length} failed critical sections...`,
+    );
 
     for (const section of failedCriticalSections) {
       try {
@@ -1309,13 +1535,15 @@ export class ReadmeAssembler {
         const simplifiedResult = await this.generateSimplifiedSection(
           section.id,
           metadata,
-          structure
+          structure,
         );
 
         if (simplifiedResult.success) {
           results[section.id] = simplifiedResult;
           // Remove error from errors array
-          const errorIndex = errors.findIndex(error => error.includes(section.id));
+          const errorIndex = errors.findIndex((error) =>
+            error.includes(section.id),
+          );
           if (errorIndex !== -1) {
             errors.splice(errorIndex, 1);
           }
@@ -1332,18 +1560,20 @@ export class ReadmeAssembler {
   private async generateSimplifiedSection(
     sectionId: string,
     metadata: RepositoryMetadata,
-    structure: RepositoryStructure
+    structure: RepositoryStructure,
   ): Promise<GenerationResult> {
     const simplifiedPrompts: Record<string, string> = {
-      header: `# ${metadata.name}\n\n${metadata.description || 'A software project.'}\n\n![License](https://img.shields.io/badge/license-${metadata.license || 'MIT'}-blue.svg)`,
+      header: `# ${metadata.name}\n\n${metadata.description || "A software project."}\n\n![License](https://img.shields.io/badge/license-${metadata.license || "MIT"}-blue.svg)`,
       description: `## Description\n\n${metadata.description || `${metadata.name} is a ${structure.techStack.primary} project.`}`,
       features: `## Features\n\n- Feature 1\n- Feature 2\n- Feature 3`,
       installation: `## Installation\n\n\`\`\`bash\n# Clone the repository\ngit clone https://github.com/user/${metadata.name}.git\ncd ${metadata.name}\n\`\`\``,
       usage: `## Usage\n\nBasic usage example:\n\n\`\`\`${structure.techStack.primary}\n// Your code here\n\`\`\``,
-      license: `## License\n\nThis project is licensed under the ${metadata.license || 'MIT'} License.`,
+      license: `## License\n\nThis project is licensed under the ${metadata.license || "MIT"} License.`,
     };
 
-    const content = simplifiedPrompts[sectionId] || `## ${sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}\n\nTODO: Add ${sectionId} information.`;
+    const content =
+      simplifiedPrompts[sectionId] ||
+      `## ${sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}\n\nTODO: Add ${sectionId} information.`;
 
     return {
       success: true,
@@ -1357,32 +1587,34 @@ export class ReadmeAssembler {
    */
   private assembleReadme(
     sections: ReadmeSection[],
-    results: Record<string, GenerationResult>
+    results: Record<string, GenerationResult>,
   ): string {
     const readmeParts: string[] = [];
 
     for (const section of sections) {
       const result = results[section.id];
-      
+
       if (result && result.success && result.content) {
         readmeParts.push(result.content);
-        readmeParts.push(''); // Add empty line between sections
+        readmeParts.push(""); // Add empty line between sections
       } else {
         // Add placeholder for failed sections
         readmeParts.push(`## ${section.title}`);
-        readmeParts.push('*This section could not be generated automatically.*');
-        readmeParts.push('');
+        readmeParts.push(
+          "*This section could not be generated automatically.*",
+        );
+        readmeParts.push("");
       }
     }
 
-    return readmeParts.join('\n').trim();
+    return readmeParts.join("\n").trim();
   }
 
   /**
    * Utility function to add delays
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -1405,7 +1637,7 @@ export class MultiStepReadmeGenerator {
   constructor(
     geminiApiKey: string,
     githubToken?: string,
-    config: Partial<GenerationConfig> = {}
+    config: Partial<GenerationConfig> = {},
   ) {
     this.analyzer = new RepositoryAnalyzer(githubToken);
     this.sectionGenerator = new SectionGenerator(geminiApiKey, config);
@@ -1430,25 +1662,32 @@ export class MultiStepReadmeGenerator {
     errors: string[];
   }> {
     const startTime = Date.now();
-    
+
     try {
       // Extract owner and repo from URL
       const { owner, repo } = this.parseGithubUrl(githubUrl);
-      
+
       // Step 1: Analyze repository
-      console.log('Step 1: Analyzing repository...');
-      const { metadata, structure } = await this.analyzer.analyzeRepository(owner, repo);
-      
+      console.log("Step 1: Analyzing repository...");
+      const { metadata, structure } = await this.analyzer.analyzeRepository(
+        owner,
+        repo,
+      );
+
       // Step 2: Plan sections
-      console.log('Step 2: Planning README sections...');
+      console.log("Step 2: Planning README sections...");
       const sections = SectionPlanner.planSections(metadata, structure);
-      
+
       // Step 3: Generate README
-      console.log('Step 3: Generating README sections...');
-      const result = await this.assembler.generateCompleteReadme(metadata, structure, sections);
-      
+      console.log("Step 3: Generating README sections...");
+      const result = await this.assembler.generateCompleteReadme(
+        metadata,
+        structure,
+        sections,
+      );
+
       const endTime = Date.now();
-      
+
       return {
         success: result.success,
         readme: result.readme,
@@ -1463,10 +1702,9 @@ export class MultiStepReadmeGenerator {
         },
         errors: result.errors,
       };
-      
     } catch (error) {
       const endTime = Date.now();
-      
+
       return {
         success: false,
         stats: {
@@ -1485,14 +1723,14 @@ export class MultiStepReadmeGenerator {
    */
   private parseGithubUrl(url: string): { owner: string; repo: string } {
     const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-    
+
     if (!match) {
-      throw new Error('Invalid GitHub URL format');
+      throw new Error("Invalid GitHub URL format");
     }
-    
+
     return {
       owner: match[1],
-      repo: match[2].replace(/\.git$/, ''), // Remove .git suffix if present
+      repo: match[2].replace(/\.git$/, ""), // Remove .git suffix if present
     };
   }
 }
@@ -1501,15 +1739,17 @@ export class MultiStepReadmeGenerator {
 // INTEGRATION HELPER FOR NEXT.JS API ROUTES
 // ============================================================================
 
-export async function handleReadmeGeneration(request: Request): Promise<Response> {
+export async function handleReadmeGeneration(
+  request: Request,
+): Promise<Response> {
   try {
     const body = await request.json();
     const { githubUrl } = body;
 
     if (!githubUrl) {
       return Response.json(
-        { error: 'GitHub URL is required' },
-        { status: 400 }
+        { error: "GitHub URL is required" },
+        { status: 400 },
       );
     }
 
@@ -1523,18 +1763,18 @@ export async function handleReadmeGeneration(request: Request): Promise<Response
         temperature: 0.7,
         concurrentSections: 3,
         enableContinuation: true,
-      }
+      },
     );
 
     const result = await generator.generateReadme(githubUrl);
 
     if (!result.success) {
       return Response.json(
-        { 
-          error: 'Failed to generate README',
+        {
+          error: "Failed to generate README",
           details: result.errors,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -1549,11 +1789,10 @@ export async function handleReadmeGeneration(request: Request): Promise<Response
         stars: result.metadata?.stars,
       },
     });
-
   } catch (error) {
     return Response.json(
       { error: `Internal server error: ${error}` },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
