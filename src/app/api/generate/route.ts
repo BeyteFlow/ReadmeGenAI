@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url: githubUrl, language = 'English' } = body;
+    const { url: githubUrl } = body;
 
     // Validate required fields
     if (!githubUrl) {

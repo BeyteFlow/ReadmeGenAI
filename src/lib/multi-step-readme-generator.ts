@@ -64,6 +64,26 @@ export type ProjectType =
   | 'documentation'
   | 'other';
 
+export interface GitHubContentItem {
+  name: string;
+  path: string;
+  type: 'file' | 'dir' | 'symlink' | 'submodule';
+  size?: number;
+  sha?: string;
+  url?: string;
+  git_url?: string | null;
+  html_url?: string | null;
+  download_url?: string | null;
+  encoding?: string;
+  content?: string;
+  target?: string;
+  submodule_git_url?: string;
+  _links?: Record<string, unknown>;
+  [key: string]: unknown; // Allow additional properties
+}
+
+export type GitHubContentResponse = GitHubContentItem | GitHubContentItem[];
+
 export interface ReadmeSection {
   id: string;
   title: string;
@@ -153,6 +173,7 @@ export class RepositoryAnalyzer {
   /**
    * Get repository contents with smart filtering to avoid token overflow
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async getRepositoryContents(owner: string, repo: string, path = '', maxDepth = 2): Promise<any[]> {
     try {
       const { data } = await this.octokit.rest.repos.getContent({
@@ -179,7 +200,9 @@ export class RepositoryAnalyzer {
         for (const dir of subdirectories.slice(0, 5)) { // Limit subdirectory exploration
           try {
             const subContents = await this.getRepositoryContents(owner, repo, dir.path, maxDepth - 1);
-            filteredContents.push(...subContents);
+            for (const item of subContents) {
+              filteredContents.push(item);
+            }
           } catch (error) {
             // Continue if subdirectory is inaccessible
             console.warn(`Could not access directory ${dir.path}: ${error}`);
@@ -237,6 +260,7 @@ export class RepositoryAnalyzer {
   /**
    * Analyze repository structure and detect tech stack
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private analyzeStructure(contents: any[]): RepositoryStructure {
     const files = contents.map(item => item.name || item.path).filter(Boolean);
     
@@ -755,11 +779,17 @@ export class SectionGenerator {
     context: Record<string, string>
   ): string {
     const baseContext = this.buildBaseContext(metadata, structure);
+    const contextInfo = Object.keys(context).length > 0 
+      ? `\nPrevious sections for reference:\n${Object.entries(context)
+          .map(([key, content]) => `${key}:\n${content.slice(0, 200)}...`)
+          .join('\n\n')}`
+      : '';
+    
     const sectionPrompts: Record<string, string> = {
       
       header: `Generate a professional README header section for "${metadata.name}".
 
-Context: ${baseContext}
+Context: ${baseContext}${contextInfo}
 
 Requirements:
 - H1 title with project name
@@ -985,6 +1015,8 @@ Return only the markdown content.`;
     const prompt = `Continue the following "${sectionId}" section for "${metadata.name}":
 
 ${partialContent}
+
+Project Context: ${this.buildBaseContext(metadata, structure)}
 
 Continue from where it left off. Complete the section with proper markdown formatting.
 Return only the continuation content.`;
