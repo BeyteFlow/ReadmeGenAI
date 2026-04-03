@@ -179,7 +179,7 @@ export class RepositoryAnalyzer {
   /**
    * Get repository contents with smart filtering to avoid token overflow
    */
-   
+
   private async getRepositoryContents(
     owner: string,
     repo: string,
