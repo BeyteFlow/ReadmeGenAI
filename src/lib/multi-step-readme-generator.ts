@@ -12,7 +12,7 @@
  */
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Octokit } from '@octokit/rest';
+import { Octokit } from 'octokit';
 
 // ============================================================================
 // TYPES AND INTERFACES
@@ -666,5 +666,862 @@ export class SectionPlanner {
     }
 
     return sorted;
+  }
+}
+
+// ============================================================================
+// SECTION GENERATOR WITH OPTIMIZED PROMPTS
+// ============================================================================
+
+export class SectionGenerator {
+  private genAI: GoogleGenerativeAI;
+  private config: GenerationConfig;
+
+  constructor(apiKey: string, config: Partial<GenerationConfig> = {}) {
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.config = {
+      maxRetries: 3,
+      maxTokensPerSection: 800,
+      temperature: 0.7,
+      concurrentSections: 3,
+      enableContinuation: true,
+      ...config,
+    };
+  }
+
+  /**
+   * Generate a specific README section with optimized prompts
+   */
+  async generateSection(
+    sectionId: string,
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
+    context: Record<string, string> = {}
+  ): Promise<GenerationResult> {
+    const prompt = this.buildSectionPrompt(sectionId, metadata, structure, context);
+    
+    for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
+      try {
+        const result = await this.callAI(prompt, sectionId);
+        
+        if (result.success && !result.truncated) {
+          return result;
+        }
+
+        // If truncated and continuation is enabled, try to complete
+        if (result.truncated && this.config.enableContinuation && result.content) {
+          const continuationResult = await this.continueGeneration(
+            sectionId, 
+            result.content, 
+            metadata, 
+            structure
+          );
+          if (continuationResult.success) {
+            return {
+              success: true,
+              content: result.content + continuationResult.content,
+              tokensUsed: (result.tokensUsed || 0) + (continuationResult.tokensUsed || 0),
+            };
+          }
+        }
+
+        console.warn(`Section ${sectionId} generation attempt ${attempt} failed or truncated`);
+        
+      } catch (error) {
+        console.error(`Section ${sectionId} generation attempt ${attempt} error:`, error);
+        
+        if (attempt === this.config.maxRetries) {
+          return {
+            success: false,
+            error: `Failed to generate section after ${this.config.maxRetries} attempts: ${error}`,
+          };
+        }
+      }
+    }
+
+    return {
+      success: false,
+      error: `Failed to generate section ${sectionId} after ${this.config.maxRetries} attempts`,
+    };
+  }
+
+  /**
+   * Build optimized prompts for each section type
+   */
+  private buildSectionPrompt(
+    sectionId: string,
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
+    context: Record<string, string>
+  ): string {
+    const baseContext = this.buildBaseContext(metadata, structure);
+    const sectionPrompts: Record<string, string> = {
+      
+      header: `Generate a professional README header section for "${metadata.name}".
+
+Context: ${baseContext}
+
+Requirements:
+- H1 title with project name
+- Compelling tagline (1 sentence)
+- Relevant badges (build, version, license, etc.)
+- Brief description (2-3 sentences)
+
+Return only the markdown content, no explanations.`,
+
+      description: `Generate a detailed description section for "${metadata.name}".
+
+Context: ${baseContext}
+Project Type: ${structure.projectType}
+
+Requirements:
+- Clear problem statement
+- Solution explanation
+- Target audience
+- Key value proposition
+- 3-4 paragraphs maximum
+
+Return only the markdown content.`,
+
+      features: `Generate a features section for "${metadata.name}".
+
+Context: ${baseContext}
+Tech Stack: ${structure.techStack.primary}, ${structure.techStack.frameworks.join(', ')}
+
+Requirements:
+- 5-8 key features
+- Use bullet points or numbered list
+- Include brief explanations
+- Add relevant emojis
+- Focus on user benefits
+
+Return only the markdown content.`,
+
+      installation: `Generate installation instructions for "${metadata.name}".
+
+Context: ${baseContext}
+Package Files: ${structure.packageFiles.join(', ')}
+Tech Stack: ${structure.techStack.primary}
+
+Requirements:
+- Prerequisites section
+- Step-by-step installation
+- Multiple installation methods if applicable
+- Verification steps
+- Troubleshooting tips
+
+Return only the markdown content.`,
+
+      usage: `Generate usage examples for "${metadata.name}".
+
+Context: ${baseContext}
+Project Type: ${structure.projectType}
+
+Requirements:
+- Basic usage example
+- Code examples with syntax highlighting
+- Input/output examples if applicable
+- Common use cases
+- Links to more examples if needed
+
+Return only the markdown content.`,
+
+      api: `Generate API documentation section for "${metadata.name}".
+
+Context: ${baseContext}
+
+Requirements:
+- API overview
+- Authentication (if applicable)
+- Main endpoints or functions
+- Request/response examples
+- Error handling
+
+Return only the markdown content.`,
+
+      configuration: `Generate configuration section for "${metadata.name}".
+
+Context: ${baseContext}
+Config Files: ${structure.configFiles.join(', ')}
+
+Requirements:
+- Configuration options
+- Environment variables
+- Config file examples
+- Default values
+- Important settings
+
+Return only the markdown content.`,
+
+      development: `Generate development setup section for "${metadata.name}".
+
+Context: ${baseContext}
+
+Requirements:
+- Local development setup
+- Development dependencies
+- Build process
+- Development server
+- File structure overview
+
+Return only the markdown content.`,
+
+      contributing: `Generate contributing guidelines for "${metadata.name}".
+
+Context: ${baseContext}
+
+Requirements:
+- How to contribute
+- Code of conduct reference
+- Pull request process
+- Issue reporting
+- Development workflow
+
+Return only the markdown content.`,
+
+      deployment: `Generate deployment section for "${metadata.name}".
+
+Context: ${baseContext}
+Project Type: ${structure.projectType}
+
+Requirements:
+- Deployment options
+- Build process
+- Environment setup
+- Platform-specific instructions
+- Best practices
+
+Return only the markdown content.`,
+
+      examples: `Generate examples section for "${metadata.name}".
+
+Context: ${baseContext}
+
+Requirements:
+- Code examples
+- Use case scenarios
+- Working demos
+- Integration examples
+- Links to live examples
+
+Return only the markdown content.`,
+
+      testing: `Generate testing section for "${metadata.name}".
+
+Context: ${baseContext}
+Tools: ${structure.techStack.tools.join(', ')}
+
+Requirements:
+- How to run tests
+- Test types available
+- Coverage information
+- Writing tests
+- Testing best practices
+
+Return only the markdown content.`,
+
+      license: `Generate license section for "${metadata.name}".
+
+Context: ${baseContext}
+License: ${metadata.license || 'Not specified'}
+
+Requirements:
+- License information
+- Copyright notice
+- Rights and restrictions
+- License file reference
+
+Return only the markdown content.`,
+    };
+
+    return sectionPrompts[sectionId] || this.buildGenericSectionPrompt(sectionId, metadata, structure);
+  }
+
+  /**
+   * Build base context string to avoid repetition
+   */
+  private buildBaseContext(metadata: RepositoryMetadata, structure: RepositoryStructure): string {
+    return `
+Repository: ${metadata.name}
+Description: ${metadata.description || 'No description provided'}
+Language: ${metadata.language || 'Multiple'}
+Stars: ${metadata.stars}
+Project Type: ${structure.projectType}
+Primary Tech: ${structure.techStack.primary}
+Frameworks: ${structure.techStack.frameworks.join(', ') || 'None'}
+`.trim();
+  }
+
+  /**
+   * Generic section prompt for unknown sections
+   */
+  private buildGenericSectionPrompt(
+    sectionId: string,
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure
+  ): string {
+    return `Generate a "${sectionId}" section for the repository "${metadata.name}".
+
+Context: ${this.buildBaseContext(metadata, structure)}
+
+Requirements:
+- Professional markdown format
+- Clear and concise content
+- Relevant to the project type
+- Follow README best practices
+
+Return only the markdown content.`;
+  }
+
+  /**
+   * Continue generation for truncated content
+   */
+  private async continueGeneration(
+    sectionId: string,
+    partialContent: string,
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure
+  ): Promise<GenerationResult> {
+    const prompt = `Continue the following "${sectionId}" section for "${metadata.name}":
+
+${partialContent}
+
+Continue from where it left off. Complete the section with proper markdown formatting.
+Return only the continuation content.`;
+
+    return this.callAI(prompt, `${sectionId}-continuation`);
+  }
+
+  /**
+   * Call AI model with proper error handling and token management
+   */
+  private async callAI(prompt: string, sectionId: string): Promise<GenerationResult> {
+    try {
+      const model = this.genAI.getGenerativeModel({
+        model: 'gemini-1.5-pro',
+        generationConfig: {
+          temperature: this.config.temperature,
+          topP: 0.95,
+          maxOutputTokens: this.config.maxTokensPerSection,
+        },
+      });
+
+      const result = await model.generateContent(prompt);
+      const response = result.response;
+      const content = response.text();
+
+      // Check if response was truncated
+      const truncated = this.isResponseTruncated(content, sectionId);
+
+      return {
+        success: true,
+        content: content.trim(),
+        tokensUsed: this.estimateTokens(prompt + content),
+        truncated,
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: `AI generation failed: ${error}`,
+      };
+    }
+  }
+
+  /**
+   * Detect if response was truncated
+   */
+  private isResponseTruncated(content: string, sectionId: string): boolean {
+    const truncationIndicators = [
+      '...',
+      'truncated',
+      'continued',
+      '[end of response]',
+    ];
+
+    const contentLower = content.toLowerCase();
+    const hasIndicators = truncationIndicators.some(indicator => 
+      contentLower.includes(indicator)
+    );
+
+    // Check if content ends abruptly without proper markdown closure
+    const endsAbruptly = !content.trim().endsWith('.') && 
+                        !content.trim().endsWith('\n') &&
+                        content.length > 100;
+
+    // Section-specific checks
+    const sectionChecks: Record<string, boolean> = {
+      installation: !content.includes('```') && content.length > 200,
+      usage: !content.includes('```') && content.length > 200,
+      api: !content.includes('```') && content.length > 300,
+    };
+
+    return hasIndicators || endsAbruptly || (sectionChecks[sectionId] || false);
+  }
+
+  /**
+   * Estimate token usage (rough approximation)
+   */
+  private estimateTokens(text: string): number {
+    // Rough estimation: 1 token ≈ 4 characters for English text
+    return Math.ceil(text.length / 4);
+  }
+}
+
+// ============================================================================
+// README ASSEMBLER WITH RETRY LOGIC
+// ============================================================================
+
+export class ReadmeAssembler {
+  private sectionGenerator: SectionGenerator;
+  private config: GenerationConfig;
+
+  constructor(sectionGenerator: SectionGenerator, config: Partial<GenerationConfig> = {}) {
+    this.sectionGenerator = sectionGenerator;
+    this.config = {
+      maxRetries: 3,
+      maxTokensPerSection: 800,
+      temperature: 0.7,
+      concurrentSections: 3,
+      enableContinuation: true,
+      ...config,
+    };
+  }
+
+  /**
+   * Generate complete README with retry logic and section management
+   */
+  async generateCompleteReadme(
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
+    customSections?: ReadmeSection[]
+  ): Promise<{
+    success: boolean;
+    readme?: string;
+    sectionsGenerated: number;
+    sectionsTotal: number;
+    errors: string[];
+    tokensUsed: number;
+  }> {
+    // Plan sections
+    const sections = customSections || SectionPlanner.planSections(metadata, structure);
+    const optimizedSections = SectionPlanner.optimizeSectionOrder(sections);
+
+    const results: Record<string, GenerationResult> = {};
+    const errors: string[] = [];
+    let totalTokens = 0;
+
+    // Generate sections with controlled concurrency
+    await this.generateSectionsInBatches(
+      optimizedSections,
+      metadata,
+      structure,
+      results,
+      errors
+    );
+
+    // Calculate tokens used
+    totalTokens = Object.values(results).reduce(
+      (sum, result) => sum + (result.tokensUsed || 0), 
+      0
+    );
+
+    // Assemble final README
+    const readme = this.assembleReadme(optimizedSections, results);
+    const successfulSections = Object.values(results).filter(r => r.success).length;
+
+    return {
+      success: successfulSections > 0,
+      readme,
+      sectionsGenerated: successfulSections,
+      sectionsTotal: optimizedSections.length,
+      errors,
+      tokensUsed: totalTokens,
+    };
+  }
+
+  /**
+   * Generate sections in controlled batches to manage API limits
+   */
+  private async generateSectionsInBatches(
+    sections: ReadmeSection[],
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
+    results: Record<string, GenerationResult>,
+    errors: string[]
+  ): Promise<void> {
+    const batches = this.createSectionBatches(sections);
+
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`Generating batch ${batchIndex + 1}/${batches.length} with sections: ${batch.map(s => s.id).join(', ')}`);
+
+      // Generate sections in current batch concurrently
+      const batchPromises = batch.map(async (section) => {
+        const context = this.buildSectionContext(section, results);
+        const result = await this.sectionGenerator.generateSection(
+          section.id,
+          metadata,
+          structure,
+          context
+        );
+        
+        results[section.id] = result;
+        
+        if (!result.success) {
+          errors.push(`Failed to generate ${section.id}: ${result.error}`);
+        }
+
+        return result;
+      });
+
+      await Promise.all(batchPromises);
+
+      // Add delay between batches to respect API limits
+      if (batchIndex < batches.length - 1) {
+        await this.delay(1000); // 1 second delay
+      }
+    }
+
+    // Retry failed critical sections
+    await this.retryFailedCriticalSections(sections, metadata, structure, results, errors);
+  }
+
+  /**
+   * Create batches respecting dependencies and concurrency limits
+   */
+  private createSectionBatches(sections: ReadmeSection[]): ReadmeSection[][] {
+    const batches: ReadmeSection[][] = [];
+    const processed = new Set<string>();
+    const remaining = [...sections];
+
+    while (remaining.length > 0) {
+      const currentBatch: ReadmeSection[] = [];
+      const toRemove: number[] = [];
+
+      for (let i = 0; i < remaining.length && currentBatch.length < this.config.concurrentSections; i++) {
+        const section = remaining[i];
+        
+        // Check if dependencies are satisfied
+        const dependenciesSatisfied = section.dependencies.every(depId => processed.has(depId));
+        
+        if (dependenciesSatisfied) {
+          currentBatch.push(section);
+          processed.add(section.id);
+          toRemove.push(i);
+        }
+      }
+
+      // Remove processed sections (in reverse order to maintain indices)
+      for (let i = toRemove.length - 1; i >= 0; i--) {
+        remaining.splice(toRemove[i], 1);
+      }
+
+      if (currentBatch.length > 0) {
+        batches.push(currentBatch);
+      } else if (remaining.length > 0) {
+        // If no sections can be processed, there might be circular dependencies
+        // Add the first remaining section to break the cycle
+        const section = remaining.shift()!;
+        processed.add(section.id);
+        batches.push([section]);
+      }
+    }
+
+    return batches;
+  }
+
+  /**
+   * Build context for section generation based on previously generated sections
+   */
+  private buildSectionContext(
+    section: ReadmeSection,
+    results: Record<string, GenerationResult>
+  ): Record<string, string> {
+    const context: Record<string, string> = {};
+
+    for (const depId of section.dependencies) {
+      const depResult = results[depId];
+      if (depResult && depResult.success && depResult.content) {
+        context[depId] = depResult.content;
+      }
+    }
+
+    return context;
+  }
+
+  /**
+   * Retry failed critical sections with simplified prompts
+   */
+  private async retryFailedCriticalSections(
+    sections: ReadmeSection[],
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
+    results: Record<string, GenerationResult>,
+    errors: string[]
+  ): Promise<void> {
+    const failedCriticalSections = sections.filter(
+      section => section.priority === 'critical' && 
+                 (!results[section.id] || !results[section.id].success)
+    );
+
+    if (failedCriticalSections.length === 0) {
+      return;
+    }
+
+    console.log(`Retrying ${failedCriticalSections.length} failed critical sections...`);
+
+    for (const section of failedCriticalSections) {
+      try {
+        // Use simplified prompt for retry
+        const simplifiedResult = await this.generateSimplifiedSection(
+          section.id,
+          metadata,
+          structure
+        );
+
+        if (simplifiedResult.success) {
+          results[section.id] = simplifiedResult;
+          // Remove error from errors array
+          const errorIndex = errors.findIndex(error => error.includes(section.id));
+          if (errorIndex !== -1) {
+            errors.splice(errorIndex, 1);
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to retry section ${section.id}:`, error);
+      }
+    }
+  }
+
+  /**
+   * Generate simplified version of section for fallback
+   */
+  private async generateSimplifiedSection(
+    sectionId: string,
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure
+  ): Promise<GenerationResult> {
+    const simplifiedPrompts: Record<string, string> = {
+      header: `# ${metadata.name}\n\n${metadata.description || 'A software project.'}\n\n![License](https://img.shields.io/badge/license-${metadata.license || 'MIT'}-blue.svg)`,
+      description: `## Description\n\n${metadata.description || `${metadata.name} is a ${structure.techStack.primary} project.`}`,
+      features: `## Features\n\n- Feature 1\n- Feature 2\n- Feature 3`,
+      installation: `## Installation\n\n\`\`\`bash\n# Clone the repository\ngit clone https://github.com/user/${metadata.name}.git\ncd ${metadata.name}\n\`\`\``,
+      usage: `## Usage\n\nBasic usage example:\n\n\`\`\`${structure.techStack.primary}\n// Your code here\n\`\`\``,
+      license: `## License\n\nThis project is licensed under the ${metadata.license || 'MIT'} License.`,
+    };
+
+    const content = simplifiedPrompts[sectionId] || `## ${sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}\n\nTODO: Add ${sectionId} information.`;
+
+    return {
+      success: true,
+      content,
+      tokensUsed: this.estimateTokens(content),
+    };
+  }
+
+  /**
+   * Assemble final README from section results
+   */
+  private assembleReadme(
+    sections: ReadmeSection[],
+    results: Record<string, GenerationResult>
+  ): string {
+    const readmeParts: string[] = [];
+
+    for (const section of sections) {
+      const result = results[section.id];
+      
+      if (result && result.success && result.content) {
+        readmeParts.push(result.content);
+        readmeParts.push(''); // Add empty line between sections
+      } else {
+        // Add placeholder for failed sections
+        readmeParts.push(`## ${section.title}`);
+        readmeParts.push('*This section could not be generated automatically.*');
+        readmeParts.push('');
+      }
+    }
+
+    return readmeParts.join('\n').trim();
+  }
+
+  /**
+   * Utility function to add delays
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Estimate token usage
+   */
+  private estimateTokens(text: string): number {
+    return Math.ceil(text.length / 4);
+  }
+}
+
+// ============================================================================
+// MAIN MULTI-STEP README GENERATOR
+// ============================================================================
+
+export class MultiStepReadmeGenerator {
+  private analyzer: RepositoryAnalyzer;
+  private sectionGenerator: SectionGenerator;
+  private assembler: ReadmeAssembler;
+
+  constructor(
+    geminiApiKey: string,
+    githubToken?: string,
+    config: Partial<GenerationConfig> = {}
+  ) {
+    this.analyzer = new RepositoryAnalyzer(githubToken);
+    this.sectionGenerator = new SectionGenerator(geminiApiKey, config);
+    this.assembler = new ReadmeAssembler(this.sectionGenerator, config);
+  }
+
+  /**
+   * Main function to generate complete README
+   */
+  async generateReadme(githubUrl: string): Promise<{
+    success: boolean;
+    readme?: string;
+    metadata?: RepositoryMetadata;
+    structure?: RepositoryStructure;
+    sections?: ReadmeSection[];
+    stats: {
+      sectionsGenerated: number;
+      sectionsTotal: number;
+      tokensUsed: number;
+      timeElapsed: number;
+    };
+    errors: string[];
+  }> {
+    const startTime = Date.now();
+    
+    try {
+      // Extract owner and repo from URL
+      const { owner, repo } = this.parseGithubUrl(githubUrl);
+      
+      // Step 1: Analyze repository
+      console.log('Step 1: Analyzing repository...');
+      const { metadata, structure } = await this.analyzer.analyzeRepository(owner, repo);
+      
+      // Step 2: Plan sections
+      console.log('Step 2: Planning README sections...');
+      const sections = SectionPlanner.planSections(metadata, structure);
+      
+      // Step 3: Generate README
+      console.log('Step 3: Generating README sections...');
+      const result = await this.assembler.generateCompleteReadme(metadata, structure, sections);
+      
+      const endTime = Date.now();
+      
+      return {
+        success: result.success,
+        readme: result.readme,
+        metadata,
+        structure,
+        sections,
+        stats: {
+          sectionsGenerated: result.sectionsGenerated,
+          sectionsTotal: result.sectionsTotal,
+          tokensUsed: result.tokensUsed,
+          timeElapsed: endTime - startTime,
+        },
+        errors: result.errors,
+      };
+      
+    } catch (error) {
+      const endTime = Date.now();
+      
+      return {
+        success: false,
+        stats: {
+          sectionsGenerated: 0,
+          sectionsTotal: 0,
+          tokensUsed: 0,
+          timeElapsed: endTime - startTime,
+        },
+        errors: [`Generation failed: ${error}`],
+      };
+    }
+  }
+
+  /**
+   * Parse GitHub URL to extract owner and repository name
+   */
+  private parseGithubUrl(url: string): { owner: string; repo: string } {
+    const match = url.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    
+    if (!match) {
+      throw new Error('Invalid GitHub URL format');
+    }
+    
+    return {
+      owner: match[1],
+      repo: match[2].replace(/\.git$/, ''), // Remove .git suffix if present
+    };
+  }
+}
+
+// ============================================================================
+// INTEGRATION HELPER FOR NEXT.JS API ROUTES
+// ============================================================================
+
+export async function handleReadmeGeneration(request: Request): Promise<Response> {
+  try {
+    const body = await request.json();
+    const { githubUrl } = body;
+
+    if (!githubUrl) {
+      return Response.json(
+        { error: 'GitHub URL is required' },
+        { status: 400 }
+      );
+    }
+
+    // Initialize generator with environment variables
+    const generator = new MultiStepReadmeGenerator(
+      process.env.GEMINI_API_KEY!,
+      process.env.GITHUB_TOKEN, // Optional
+      {
+        maxRetries: 3,
+        maxTokensPerSection: 800,
+        temperature: 0.7,
+        concurrentSections: 3,
+        enableContinuation: true,
+      }
+    );
+
+    const result = await generator.generateReadme(githubUrl);
+
+    if (!result.success) {
+      return Response.json(
+        { 
+          error: 'Failed to generate README',
+          details: result.errors,
+        },
+        { status: 500 }
+      );
+    }
+
+    return Response.json({
+      success: true,
+      readme: result.readme,
+      stats: result.stats,
+      metadata: {
+        name: result.metadata?.name,
+        description: result.metadata?.description,
+        language: result.metadata?.language,
+        stars: result.metadata?.stars,
+      },
+    });
+
+  } catch (error) {
+    return Response.json(
+      { error: `Internal server error: ${error}` },
+      { status: 500 }
+    );
   }
 }
