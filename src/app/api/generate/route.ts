@@ -74,13 +74,13 @@ export async function POST(request: NextRequest) {
 
     // Generate README with detailed tracking
     const startTime = Date.now();
-    console.log(`Starting multi-step README generation for ${githubUrl}`);
+    console.log("Starting multi-step README generation for", githubUrl);
 
     const result = await generator.generateReadme(githubUrl);
     const endTime = Date.now();
 
     // Log generation statistics for monitoring
-    console.log(`README generation completed for ${githubUrl}:`, {
+    console.log("README generation completed for", githubUrl, {
       success: result.success,
       sectionsGenerated: result.stats.sectionsGenerated,
       sectionsTotal: result.stats.sectionsTotal,
