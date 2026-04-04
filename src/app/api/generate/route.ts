@@ -60,9 +60,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Initialize the multi-step generator with enhanced configuration
+    const geminiApiKey = process.env.GEMINI_API_KEY;
+    const githubToken = process.env.GITHUB_TOKEN;
+    
+    if (!geminiApiKey) {
+      console.error('GEMINI_API_KEY environment variable is not set');
+      return NextResponse.json(
+        { error: 'Server configuration error: Missing AI API key' },
+        { status: 500 }
+      );
+    }
+    
+    console.log('Initializing generator with API key length:', geminiApiKey.length);
+    
     const generator = new MultiStepReadmeGenerator(
-      process.env.GEMINI_API_KEY!,
-      process.env.GITHUB_TOKEN, // Optional GitHub token for higher rate limits
+      geminiApiKey,
+      githubToken, // Optional GitHub token for higher rate limits
       {
         maxRetries: 3,
         maxTokensPerSection: 800, // Smaller token limit per section
