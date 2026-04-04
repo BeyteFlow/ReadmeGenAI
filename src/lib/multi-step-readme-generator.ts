@@ -67,7 +67,7 @@ export type ProjectType =
 export interface GitHubContentItem {
   name: string;
   path: string;
-  type: 'file' | 'dir' | 'symlink' | 'submodule';
+  type: "file" | "dir" | "symlink" | "submodule";
   size?: number;
   sha?: string;
   url?: string;
@@ -179,6 +179,7 @@ export class RepositoryAnalyzer {
   /**
    * Get repository contents with smart filtering to avoid token overflow
    */
+
   private async getRepositoryContents(
     owner: string,
     repo: string,
@@ -989,12 +990,13 @@ export class SectionGenerator {
     context: Record<string, string>,
   ): string {
     const baseContext = this.buildBaseContext(metadata, structure);
-    const contextInfo = Object.keys(context).length > 0 
-      ? `\nPrevious sections for reference:\n${Object.entries(context)
-          .map(([key, content]) => `${key}:\n${content.slice(0, 200)}...`)
-          .join('\n\n')}`
-      : '';
-    
+    const contextInfo =
+      Object.keys(context).length > 0
+        ? `\nPrevious sections for reference:\n${Object.entries(context)
+            .map(([key, content]) => `${key}:\n${content.slice(0, 200)}...`)
+            .join("\n\n")}`
+        : "";
+
     const sectionPrompts: Record<string, string> = {
       header: `Generate a stunning, professional README header section for "${metadata.name}".
 
