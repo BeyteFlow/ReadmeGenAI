@@ -900,9 +900,9 @@ export class SectionGenerator {
 
   constructor(apiKey: string, config: Partial<GenerationConfig> = {}) {
     if (!apiKey) {
-      throw new Error('Gemini API key is required for SectionGenerator');
+      throw new Error("Gemini API key is required for SectionGenerator");
     }
-    
+
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.config = {
       maxRetries: 3,
@@ -912,12 +912,15 @@ export class SectionGenerator {
       enableContinuation: true,
       ...config,
     };
-    
-    console.log('SectionGenerator initialized with API key length:', apiKey.length);
-    
+
+    console.log(
+      "SectionGenerator initialized with API key length:",
+      apiKey.length,
+    );
+
     // Test API connection on initialization
-    this.testAPIConnection().catch(error => {
-      console.error('API connection test failed:', error);
+    this.testAPIConnection().catch((error) => {
+      console.error("API connection test failed:", error);
     });
   }
 
@@ -926,13 +929,15 @@ export class SectionGenerator {
    */
   private async testAPIConnection(): Promise<void> {
     try {
-      console.log('Testing Gemini API connection...');
+      console.log("Testing Gemini API connection...");
       const model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
-      const result = await model.generateContent("Hello, respond with 'API connection successful'");
+      const result = await model.generateContent(
+        "Hello, respond with 'API connection successful'",
+      );
       const response = result.response.text();
-      console.log('API test response:', response.substring(0, 100));
+      console.log("API test response:", response.substring(0, 100));
     } catch (error) {
-      console.error('API connection test failed:', error);
+      console.error("API connection test failed:", error);
     }
   }
 
@@ -1483,16 +1488,22 @@ Return only the continuation content.`;
     sectionId: string,
   ): Promise<GenerationResult> {
     try {
-      console.log(`Calling AI for section ${sectionId} with prompt length: ${prompt.length}`);
-      
+      console.log(
+        `Calling AI for section ${sectionId} with prompt length: ${prompt.length}`,
+      );
+
       // Try different model names in case gemini-1.5-pro is not available
-      const modelNames = ["gemini-1.5-pro", "gemini-1.5-pro-latest", "gemini-pro"];
+      const modelNames = [
+        "gemini-1.5-pro",
+        "gemini-1.5-pro-latest",
+        "gemini-pro",
+      ];
       let lastError: Error | null = null;
-      
+
       for (const modelName of modelNames) {
         try {
           console.log(`Trying model: ${modelName} for section ${sectionId}`);
-          
+
           const model = this.genAI.getGenerativeModel({
             model: modelName,
             generationConfig: {
@@ -1505,8 +1516,10 @@ Return only the continuation content.`;
           const result = await model.generateContent(prompt);
           const response = result.response;
           const content = response.text();
-          
-          console.log(`AI response for ${sectionId} received using ${modelName}, length: ${content.length}`);
+
+          console.log(
+            `AI response for ${sectionId} received using ${modelName}, length: ${content.length}`,
+          );
 
           // Check if response was truncated
           const truncated = this.isResponseTruncated(content, sectionId);
@@ -1518,23 +1531,27 @@ Return only the continuation content.`;
             truncated,
           };
         } catch (error) {
-          console.warn(`Model ${modelName} failed for section ${sectionId}:`, error);
+          console.warn(
+            `Model ${modelName} failed for section ${sectionId}:`,
+            error,
+          );
           lastError = error instanceof Error ? error : new Error(String(error));
           continue; // Try next model
         }
       }
-      
+
       // If all models failed, throw the last error
       if (lastError) {
         throw lastError;
       }
-      
+
       throw new Error("All model attempts failed");
     } catch (error) {
       console.error(`AI generation failed for section ${sectionId}:`, error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       console.error(`Error details:`, errorMessage);
-      
+
       return {
         success: false,
         error: `AI generation failed for ${sectionId}: ${errorMessage}`,
