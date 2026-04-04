@@ -1663,7 +1663,12 @@ export class ReadmeAssembler {
     );
 
     // Assemble final README
-    const readme = this.assembleReadme(optimizedSections, results, metadata, structure);
+    const readme = this.assembleReadme(
+      optimizedSections,
+      results,
+      metadata,
+      structure,
+    );
     const successfulSections = Object.values(results).filter(
       (r) => r.success,
     ).length;
@@ -1897,8 +1902,15 @@ ${metadata.name} is built using modern ${structure.techStack.primary} architectu
 | Technology | Purpose | Key Benefit |
 |:-----------|:--------|:------------|
 | **${structure.techStack.primary}** | Core Runtime | High performance and reliability |
-${structure.techStack.frameworks.map(fw => `| **${fw}** | Framework | Enhanced developer experience |`).join('\n')}
-${structure.techStack.tools.length > 0 ? structure.techStack.tools.slice(0, 3).map(tool => `| **${tool}** | Development Tool | Improved workflow |`).join('\n') : ''}`,
+${structure.techStack.frameworks.map((fw) => `| **${fw}** | Framework | Enhanced developer experience |`).join("\n")}
+${
+  structure.techStack.tools.length > 0
+    ? structure.techStack.tools
+        .slice(0, 3)
+        .map((tool) => `| **${tool}** | Development Tool | Improved workflow |`)
+        .join("\n")
+    : ""
+}`,
 
       installation: `## Installation & Setup
 
@@ -1906,7 +1918,7 @@ ${structure.techStack.tools.length > 0 ? structure.techStack.tools.slice(0, 3).m
 
 Ensure you have the following installed:
 - **${structure.techStack.primary}**: Latest LTS version recommended
-${structure.packageFiles.includes('package.json') ? '- **npm**, **yarn**, or **pnpm**: Package manager' : ''}
+${structure.packageFiles.includes("package.json") ? "- **npm**, **yarn**, or **pnpm**: Package manager" : ""}
 
 ### Quick Start
 
@@ -1916,7 +1928,9 @@ ${structure.packageFiles.includes('package.json') ? '- **npm**, **yarn**, or **p
    cd ${metadata.name}
    \`\`\`
 
-${structure.packageFiles.includes('package.json') ? `2. **Install dependencies**:
+${
+  structure.packageFiles.includes("package.json")
+    ? `2. **Install dependencies**:
    \`\`\`bash
    npm install
    # or
@@ -1930,31 +1944,36 @@ ${structure.packageFiles.includes('package.json') ? `2. **Install dependencies**
    npm run dev
    # or
    yarn dev
-   \`\`\`` : `2. **Build the project**:
+   \`\`\``
+    : `2. **Build the project**:
    \`\`\`bash
    make build
    # or follow project-specific build instructions
-   \`\`\``}`,
+   \`\`\``
+}`,
 
       usage: `## Usage
 
 ### Basic Example
 
 \`\`\`${structure.techStack.primary.toLowerCase()}
-${structure.techStack.primary === 'JavaScript' || structure.techStack.primary === 'TypeScript' ? 
-  `import { ${metadata.name} } from './${metadata.name.toLowerCase()}';
+${
+  structure.techStack.primary === "JavaScript" ||
+  structure.techStack.primary === "TypeScript"
+    ? `import { ${metadata.name} } from './${metadata.name.toLowerCase()}';
 
 // Basic usage
 const result = new ${metadata.name}();
-console.log(result);` :
-structure.techStack.primary === 'Python' ?
-  `from ${metadata.name.toLowerCase()} import main
+console.log(result);`
+    : structure.techStack.primary === "Python"
+      ? `from ${metadata.name.toLowerCase()} import main
 
 # Basic usage
 result = main()
-print(result)` :
-  `// Basic usage example
-// See documentation for detailed API reference`}
+print(result)`
+      : `// Basic usage example
+// See documentation for detailed API reference`
+}
 \`\`\`
 
 ### Advanced Configuration
@@ -1979,9 +1998,11 @@ Please ensure your code follows the project's coding standards and includes appr
 
 This project is licensed under the **${metadata.license || "MIT License"}**.
 
-${metadata.license === "MIT" || !metadata.license ? 
-  `The MIT License grants broad permissions to use, copy, modify, merge, publish, distribute, sublicense, and sell the software, with minimal restrictions. The main requirements are to include the original copyright notice and license in any substantial portions of the software.` :
-  `Please see the license terms for details about permitted use, modification, and distribution of this software.`}
+${
+  metadata.license === "MIT" || !metadata.license
+    ? `The MIT License grants broad permissions to use, copy, modify, merge, publish, distribute, sublicense, and sell the software, with minimal restrictions. The main requirements are to include the original copyright notice and license in any substantial portions of the software.`
+    : `Please see the license terms for details about permitted use, modification, and distribution of this software.`
+}
 
 For the full license text, see the [LICENSE](LICENSE) file in this repository.`,
     };
@@ -2016,25 +2037,38 @@ For the full license text, see the [LICENSE](LICENSE) file in this repository.`,
         readmeParts.push(""); // Add empty line between sections
       } else {
         // Use enhanced fallback content instead of placeholder
-        console.warn(`Section ${section.id} failed, using enhanced fallback content`);
-        
+        console.warn(
+          `Section ${section.id} failed, using enhanced fallback content`,
+        );
+
         if (metadata && structure) {
           try {
             // Generate professional fallback content
-            const fallbackContent = this.generateFallbackContent(section.id, metadata, structure);
+            const fallbackContent = this.generateFallbackContent(
+              section.id,
+              metadata,
+              structure,
+            );
             readmeParts.push(fallbackContent);
             readmeParts.push(""); // Add empty line between sections
           } catch (error) {
-            console.error(`Failed to generate fallback for ${section.id}:`, error);
+            console.error(
+              `Failed to generate fallback for ${section.id}:`,
+              error,
+            );
             // Last resort: basic section header
             readmeParts.push(`## ${section.title}`);
-            readmeParts.push("*This section could not be generated automatically.*");
+            readmeParts.push(
+              "*This section could not be generated automatically.*",
+            );
             readmeParts.push("");
           }
         } else {
           // Fallback when metadata/structure not available
           readmeParts.push(`## ${section.title}`);
-          readmeParts.push("*This section could not be generated automatically.*");
+          readmeParts.push(
+            "*This section could not be generated automatically.*",
+          );
           readmeParts.push("");
         }
       }
@@ -2050,9 +2084,9 @@ For the full license text, see the [LICENSE](LICENSE) file in this repository.`,
    * Generate professional fallback content for failed sections
    */
   private generateFallbackContent(
-    sectionId: string, 
-    metadata: RepositoryMetadata, 
-    structure: RepositoryStructure
+    sectionId: string,
+    metadata: RepositoryMetadata,
+    structure: RepositoryStructure,
   ): string {
     const fallbackPrompts: Record<string, string> = {
       header: `<p align="center">
@@ -2091,15 +2125,34 @@ ${metadata.name} is built using modern ${structure.techStack.primary} architectu
 | Technology | Purpose | Key Benefit |
 |:-----------|:--------|:------------|
 | **${structure.techStack.primary}** | Core Runtime | High performance and reliability |
-${structure.techStack.frameworks.map(fw => `| **${fw}** | Framework | Enhanced developer experience |`).join('\n')}
-${structure.techStack.tools.length > 0 ? structure.techStack.tools.slice(0, 3).map(tool => `| **${tool}** | Development Tool | Improved workflow |`).join('\n') : ''}`,
+${structure.techStack.frameworks.map((fw) => `| **${fw}** | Framework | Enhanced developer experience |`).join("\n")}
+${
+  structure.techStack.tools.length > 0
+    ? structure.techStack.tools
+        .slice(0, 3)
+        .map((tool) => `| **${tool}** | Development Tool | Improved workflow |`)
+        .join("\n")
+    : ""
+}`,
 
       structure: `### Directory Structure
 
 \`\`\`
 .
-${structure.directories.slice(0, 8).map(dir => `├── 📁 ${dir}/                     # ${this.getDirectoryDescription(dir)}`).join('\n')}
-${structure.rootFiles.slice(0, 5).map(file => `├── 📄 ${file}                    # ${this.getFileDescription(file)}`).join('\n')}
+${structure.directories
+  .slice(0, 8)
+  .map(
+    (dir) =>
+      `├── 📁 ${dir}/                     # ${this.getDirectoryDescription(dir)}`,
+  )
+  .join("\n")}
+${structure.rootFiles
+  .slice(0, 5)
+  .map(
+    (file) =>
+      `├── 📄 ${file}                    # ${this.getFileDescription(file)}`,
+  )
+  .join("\n")}
 └── 📄 README.md                  # This README file
 \`\`\``,
 
@@ -2109,7 +2162,7 @@ ${structure.rootFiles.slice(0, 5).map(file => `├── 📄 ${file}           
 
 Ensure you have the following installed:
 - **${structure.techStack.primary}**: Latest LTS version recommended
-${structure.packageFiles.includes('package.json') ? '- **npm**, **yarn**, or **pnpm**: Package manager' : ''}
+${structure.packageFiles.includes("package.json") ? "- **npm**, **yarn**, or **pnpm**: Package manager" : ""}
 
 ### Quick Start
 
@@ -2119,7 +2172,9 @@ ${structure.packageFiles.includes('package.json') ? '- **npm**, **yarn**, or **p
    cd ${metadata.name}
    \`\`\`
 
-${structure.packageFiles.includes('package.json') ? `2. **Install dependencies**:
+${
+  structure.packageFiles.includes("package.json")
+    ? `2. **Install dependencies**:
    \`\`\`bash
    npm install
    # or
@@ -2133,11 +2188,13 @@ ${structure.packageFiles.includes('package.json') ? `2. **Install dependencies**
    npm run dev
    # or
    yarn dev
-   \`\`\`` : `2. **Build the project**:
+   \`\`\``
+    : `2. **Build the project**:
    \`\`\`bash
    make build
    # or follow project-specific build instructions
-   \`\`\``}`,
+   \`\`\``
+}`,
 
       usage: `## Usage
 
@@ -2169,18 +2226,23 @@ Please ensure your code follows the project's coding standards and includes appr
 
 This project is licensed under the **${metadata.license || "MIT License"}**.
 
-${metadata.license === "MIT" || !metadata.license ? 
-  `The MIT License grants broad permissions to use, copy, modify, merge, publish, distribute, sublicense, and sell the software, with minimal restrictions. The main requirements are to include the original copyright notice and license in any substantial portions of the software.` :
-  `Please see the license terms for details about permitted use, modification, and distribution of this software.`}
+${
+  metadata.license === "MIT" || !metadata.license
+    ? `The MIT License grants broad permissions to use, copy, modify, merge, publish, distribute, sublicense, and sell the software, with minimal restrictions. The main requirements are to include the original copyright notice and license in any substantial portions of the software.`
+    : `Please see the license terms for details about permitted use, modification, and distribution of this software.`
+}
 
 For the full license text, see the [LICENSE](LICENSE) file in this repository.`,
     };
 
-    return fallbackPrompts[sectionId] || `## ${sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
+    return (
+      fallbackPrompts[sectionId] ||
+      `## ${sectionId.charAt(0).toUpperCase() + sectionId.slice(1)}
 
 This section contains ${sectionId} information for ${metadata.name}.
 
-*Content generated using fallback template - for enhanced content, please ensure AI API is properly configured.*`;
+*Content generated using fallback template - for enhanced content, please ensure AI API is properly configured.*`
+    );
   }
 
   /**
@@ -2188,20 +2250,20 @@ This section contains ${sectionId} information for ${metadata.name}.
    */
   private getDirectoryDescription(dir: string): string {
     const descriptions: Record<string, string> = {
-      'src': 'Main application source code',
-      'lib': 'Library and utility functions',
-      'components': 'Reusable UI components',
-      'pages': 'Application pages and routes',
-      'api': 'API routes and endpoints',
-      'utils': 'Utility functions and helpers',
-      'styles': 'Styling and CSS files',
-      'public': 'Static assets and files',
-      'docs': 'Project documentation',
-      'tests': 'Test files and test utilities',
-      'test': 'Test files and test utilities',
-      'assets': 'Static assets and resources',
-      'config': 'Configuration files',
-      'scripts': 'Build and utility scripts',
+      src: "Main application source code",
+      lib: "Library and utility functions",
+      components: "Reusable UI components",
+      pages: "Application pages and routes",
+      api: "API routes and endpoints",
+      utils: "Utility functions and helpers",
+      styles: "Styling and CSS files",
+      public: "Static assets and files",
+      docs: "Project documentation",
+      tests: "Test files and test utilities",
+      test: "Test files and test utilities",
+      assets: "Static assets and resources",
+      config: "Configuration files",
+      scripts: "Build and utility scripts",
     };
 
     return descriptions[dir.toLowerCase()] || `${dir} related files`;
@@ -2212,16 +2274,16 @@ This section contains ${sectionId} information for ${metadata.name}.
    */
   private getFileDescription(file: string): string {
     const descriptions: Record<string, string> = {
-      'package.json': 'Project metadata and dependencies',
-      'tsconfig.json': 'TypeScript configuration',
-      'next.config.js': 'Next.js configuration',
-      'tailwind.config.js': 'Tailwind CSS configuration',
-      'eslint.config.js': 'ESLint configuration',
-      '.gitignore': 'Git ignore patterns',
-      'LICENSE': 'Project license information',
-      'README.md': 'Project documentation',
-      'Dockerfile': 'Docker container configuration',
-      'docker-compose.yml': 'Docker compose configuration',
+      "package.json": "Project metadata and dependencies",
+      "tsconfig.json": "TypeScript configuration",
+      "next.config.js": "Next.js configuration",
+      "tailwind.config.js": "Tailwind CSS configuration",
+      "eslint.config.js": "ESLint configuration",
+      ".gitignore": "Git ignore patterns",
+      LICENSE: "Project license information",
+      "README.md": "Project documentation",
+      Dockerfile: "Docker container configuration",
+      "docker-compose.yml": "Docker compose configuration",
     };
 
     return descriptions[file] || `${file} configuration`;
@@ -2232,27 +2294,27 @@ This section contains ${sectionId} information for ${metadata.name}.
    */
   private generateUsageExample(techStack: string, projectName: string): string {
     switch (techStack.toLowerCase()) {
-      case 'javascript':
-      case 'typescript':
+      case "javascript":
+      case "typescript":
         return `import { ${projectName} } from './${projectName.toLowerCase()}';
 
 // Basic usage
 const result = new ${projectName}();
 console.log(result);`;
-      
-      case 'python':
+
+      case "python":
         return `from ${projectName.toLowerCase()} import main
 
 # Basic usage
 result = main()
 print(result)`;
-      
-      case 'java':
+
+      case "java":
         return `// Basic usage
 ${projectName} app = new ${projectName}();
 app.run();`;
-      
-      case 'go':
+
+      case "go":
         return `package main
 
 import "./${projectName.toLowerCase()}"
@@ -2261,7 +2323,7 @@ func main() {
     // Basic usage
     ${projectName.toLowerCase()}.Run()
 }`;
-      
+
       default:
         return `// Basic usage example
 // See documentation for detailed API reference`;
