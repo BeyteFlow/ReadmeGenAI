@@ -71,7 +71,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Initializing multi-step README generator with AI provider credentials configured");
+    console.log(
+      "Initializing multi-step README generator with AI provider credentials configured",
+    );
 
     const generator = new MultiStepReadmeGenerator(
       geminiApiKey,
