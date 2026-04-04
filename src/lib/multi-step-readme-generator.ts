@@ -185,7 +185,7 @@ export class RepositoryAnalyzer {
     repo: string,
     path = "",
     maxDepth = 2,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any[]> {
     try {
       const { data } = await this.octokit.rest.repos.getContent({
@@ -684,7 +684,7 @@ export class SectionPlanner {
       },
       {
         id: "structure",
-        title: "Directory Structure", 
+        title: "Directory Structure",
         priority: "low",
         order: 3.7,
         estimatedTokens: 300,
@@ -1013,7 +1013,7 @@ Example format to follow:
   <p align="center">Compelling one-line tagline that captures the project's essence</p>
   <p align="center">
     <img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square" />
-    <img alt="License" src="https://img.shields.io/badge/license-${metadata.license || 'MIT'}-blue.svg?style=flat-square" />
+    <img alt="License" src="https://img.shields.io/badge/license-${metadata.license || "MIT"}-blue.svg?style=flat-square" />
     <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" />
     <img alt="GitHub Stars" src="https://img.shields.io/github/stars/USER/REPO?style=flat-square&color=yellow" />
   </p>
