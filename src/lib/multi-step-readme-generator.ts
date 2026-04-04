@@ -179,12 +179,12 @@ export class RepositoryAnalyzer {
   /**
    * Get repository contents with smart filtering to avoid token overflow
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async getRepositoryContents(
     owner: string,
     repo: string,
     path = "",
     maxDepth = 2,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<any[]> {
     try {
       const { data } = await this.octokit.rest.repos.getContent({
@@ -674,6 +674,22 @@ export class SectionPlanner {
         dependencies: ["description"],
       },
       {
+        id: "architecture",
+        title: "Technical Architecture",
+        priority: "medium",
+        order: 3.5,
+        estimatedTokens: 400,
+        dependencies: ["features"],
+      },
+      {
+        id: "structure",
+        title: "Directory Structure", 
+        priority: "low",
+        order: 3.7,
+        estimatedTokens: 300,
+        dependencies: ["architecture"],
+      },
+      {
         id: "installation",
         title: "Installation",
         priority: "critical",
@@ -980,58 +996,152 @@ export class SectionGenerator {
       : '';
     
     const sectionPrompts: Record<string, string> = {
-      header: `Generate a professional README header section for "${metadata.name}".
+      header: `Generate a stunning, professional README header section for "${metadata.name}".
 
 Context: ${baseContext}${contextInfo}
 
+Create a header that includes:
+1. Centered title and tagline using HTML tags
+2. Professional badge collection (build status, license, PRs welcome, GitHub stars)
+3. Brief compelling description (2-3 sentences)
+
+Example format to follow:
+<p align="center">
+  <h1>${metadata.name}</h1>
+  <p align="center">Compelling one-line tagline that captures the project's essence</p>
+  <p align="center">
+    <img alt="Build Status" src="https://img.shields.io/badge/build-passing-brightgreen?style=flat-square" />
+    <img alt="License" src="https://img.shields.io/badge/license-${metadata.license || 'MIT'}-blue.svg?style=flat-square" />
+    <img alt="PRs Welcome" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" />
+    <img alt="GitHub Stars" src="https://img.shields.io/github/stars/USER/REPO?style=flat-square&color=yellow" />
+  </p>
+</p>
+
 Requirements:
-- H1 title with project name
-- Compelling tagline (1 sentence)
-- Relevant badges (build, version, license, etc.)
-- Brief description (2-3 sentences)
+- Use HTML for perfect alignment
+- Create an engaging tagline that explains what the project does
+- Include realistic badge URLs appropriate for ${structure.projectType} projects
+- Make it visually appealing and professional
+- Add a horizontal rule (---) after the header
 
-Return only the markdown content, no explanations.`,
+Return only the markdown/HTML content, no explanations.`,
 
-      description: `Generate a detailed description section for "${metadata.name}".
+      description: `Generate a compelling strategic description section for "${metadata.name}".
 
 Context: ${baseContext}
 Project Type: ${structure.projectType}
+Technologies: ${structure.techStack.primary}, ${structure.techStack.frameworks.join(", ")}
+
+Create two main sections:
+
+## The Strategic "Why"
+> Start with a blockquote explaining the problem this project solves. What pain point does it address? Why does this project exist?
+
+Follow with 2-3 paragraphs that explain:
+- The core problem in the industry/domain
+- How this project solves it uniquely
+- The value it provides to users
+- Who the target audience is
+
+Make it engaging and professional. Focus on the business case and user benefits, not just technical features.
 
 Requirements:
-- Clear problem statement
-- Solution explanation
-- Target audience
-- Key value proposition
-- 3-4 paragraphs maximum
+- Start with "## The Strategic \"Why\"" as the section header
+- Use blockquote (>) for the opening problem statement
+- Write in a professional, compelling tone
+- Avoid technical jargon - focus on benefits
+- 3-4 well-structured paragraphs total
+- No placeholder text - create realistic, specific content
 
 Return only the markdown content.`,
 
-      features: `Generate a features section for "${metadata.name}".
+      features: `Generate a comprehensive "Key Features" section for "${metadata.name}".
 
 Context: ${baseContext}
 Tech Stack: ${structure.techStack.primary}, ${structure.techStack.frameworks.join(", ")}
+Project Type: ${structure.projectType}
+
+Create a section called "## Key Features" with 6-8 compelling features that highlight:
+- Core functionality and capabilities
+- Technical advantages (performance, scalability, etc.)
+- User experience benefits
+- Integration capabilities
+- Developer experience improvements
+
+Format each feature as:
+*   🚀 **Feature Name**: Clear description explaining the benefit and impact
+
+Example format:
+## Key Features
+
+*   ✨ **AI-Powered Analysis**: Intelligently parses your repository's code, dependencies, and structure to understand its core purpose and components.
+*   🚀 **Instant Generation**: Get a complete, production-ready solution in mere seconds, drastically reducing development overhead.
 
 Requirements:
-- 5-8 key features
-- Use bullet points or numbered list
-- Include brief explanations
-- Add relevant emojis
-- Focus on user benefits
+- Use bullet points with meaningful emojis
+- Bold the feature name
+- Focus on user benefits, not just technical specs
+- Make each description 1-2 sentences
+- Use action-oriented language
+- Be specific about value propositions
+- No placeholder content - generate realistic features based on the project type
 
 Return only the markdown content.`,
 
-      installation: `Generate installation instructions for "${metadata.name}".
+      installation: `Generate comprehensive installation and setup instructions for "${metadata.name}".
 
 Context: ${baseContext}
 Package Files: ${structure.packageFiles.join(", ")}
 Tech Stack: ${structure.techStack.primary}
+Project Type: ${structure.projectType}
+
+Create a detailed "## Operational Setup" section with:
+
+### Prerequisites
+List specific software requirements with versions
+
+### Installation
+Step-by-step installation process with multiple package managers if applicable
+
+### Environment Configuration  
+Explain any required environment variables or configuration files
+
+Format example:
+## Operational Setup
+
+Follow these steps to get ${metadata.name} up and running on your local machine.
+
+### Prerequisites
+
+Ensure you have the following installed:
+
+*   **Node.js**: LTS version (e.g., 18.x or 20.x)
+*   **npm** (Node Package Manager), **yarn**, or **pnpm** (preferred)
+
+### Installation
+
+1.  **Clone the repository**:
+    \`\`\`bash
+    git clone https://github.com/user/repo.git
+    cd repo
+    \`\`\`
+
+2.  **Install dependencies**:
+    [Include commands for different package managers]
+
+3.  **Start the development server**:
+    [Include appropriate start commands]
+
+### Environment Configuration
+[Explain .env setup if needed]
 
 Requirements:
-- Prerequisites section
-- Step-by-step installation
-- Multiple installation methods if applicable
-- Verification steps
-- Troubleshooting tips
+- Use numbered lists for steps
+- Include code blocks with proper syntax highlighting
+- Provide multiple installation options when relevant
+- Be specific about versions and requirements
+- Include verification steps
+- No placeholder content
 
 Return only the markdown content.`,
 
@@ -1089,16 +1199,37 @@ Requirements:
 
 Return only the markdown content.`,
 
-      contributing: `Generate contributing guidelines for "${metadata.name}".
+      contributing: `Generate comprehensive contributing guidelines for "${metadata.name}".
 
 Context: ${baseContext}
+Project Type: ${structure.projectType}
+
+Create a detailed section explaining how to contribute with:
+- Welcoming introduction
+- Step-by-step contribution process
+- Code standards and requirements
+- Reference to code of conduct
+
+Format as subsection of larger "Community & Governance" section:
+
+### Contributing
+
+We encourage and appreciate community contributions. If you're looking to contribute, please follow these guidelines:
+
+1.  **Fork** the repository.
+2.  **Create a new branch** for your feature or bug fix: \`git checkout -b feature/your-feature-name\` or \`bugfix/issue-description\`.
+3.  **Commit your changes** with clear and concise messages.
+4.  **Push your branch** to your forked repository.
+5.  **Open a Pull Request** against the \`main\` branch of this repository, describing your changes in detail.
+
+Please ensure your code adheres to the project's coding standards and includes appropriate tests. For more details, please refer to our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 Requirements:
-- How to contribute
-- Code of conduct reference
-- Pull request process
-- Issue reporting
-- Development workflow
+- Welcoming and encouraging tone
+- Clear step-by-step process
+- Mention testing and code standards
+- Professional formatting
+- No placeholder content
 
 Return only the markdown content.`,
 
@@ -1143,16 +1274,109 @@ Requirements:
 
 Return only the markdown content.`,
 
-      license: `Generate license section for "${metadata.name}".
+      license: `Generate a professional license section for "${metadata.name}".
 
 Context: ${baseContext}
-License: ${metadata.license || "Not specified"}
+License: ${metadata.license || "MIT License"}
+
+Create a comprehensive "## Community & Governance" section that includes:
+
+### Contributing subsection
+### License subsection with detailed explanation
+
+Format example:
+## Community & Governance
+
+We welcome contributions and feedback from the community to make ${metadata.name} even better!
+
+### Contributing
+
+We encourage and appreciate community contributions. If you're looking to contribute, please follow these guidelines:
+
+1.  **Fork** the repository.
+2.  **Create a new branch** for your feature or bug fix: \`git checkout -b feature/your-feature-name\`.
+3.  **Commit your changes** with clear and concise messages.
+4.  **Push your branch** to your forked repository.
+5.  **Open a Pull Request** against the \`main\` branch, describing your changes in detail.
+
+### License
+
+This project is licensed under the **${metadata.license || "MIT License"}**.
+
+[Include 2-3 sentences explaining what this license allows and its key terms]
+
+For the full text of the license, please see the [LICENSE](LICENSE) file in this repository.
 
 Requirements:
-- License information
-- Copyright notice
-- Rights and restrictions
-- License file reference
+- Professional, welcoming tone
+- Clear contribution process
+- Detailed license explanation
+- No placeholder content
+
+Return only the markdown content.`,
+
+      architecture: `Generate a comprehensive "Technical Architecture" section for "${metadata.name}".
+
+Context: ${baseContext}
+Tech Stack: ${structure.techStack.primary}, ${structure.techStack.frameworks.join(", ")}, ${structure.techStack.tools.join(", ")}
+Project Type: ${structure.projectType}
+
+Create a section that includes:
+1. Architecture overview paragraph
+2. Technology stack table
+3. Key benefits explanation
+
+Format example:
+## Technical Architecture
+
+${metadata.name} is built on a robust and modern tech stack designed for performance, scalability, and an excellent developer experience.
+
+| Technology    | Purpose                    | Key Benefit                                |
+| :------------ | :------------------------- | :----------------------------------------- |
+| **Technology1**   | Primary Purpose        | Main advantage or benefit                  |
+| **Technology2**| Secondary Purpose       | Performance/Developer experience benefit    |
+
+Requirements:
+- Start with compelling architecture description
+- Use a well-formatted table with technology, purpose, and benefit columns
+- Include 4-8 key technologies from the tech stack
+- Focus on business benefits, not just technical specs
+- Professional tone
+- No placeholder content - use actual technologies detected
+
+Return only the markdown content.`,
+
+      structure: `Generate a "Directory Structure" visualization for "${metadata.name}".
+
+Context: ${baseContext}
+Directories: ${structure.directories.join(", ")}
+Root Files: ${structure.rootFiles.join(", ")}
+Project Type: ${structure.projectType}
+
+Create a section with:
+1. Brief introduction
+2. Tree-style directory structure
+3. Explanations for key directories/files
+
+Format example:
+### Directory Structure
+
+\`\`\`
+.
+├── 📁 directory1                    # Purpose description
+├── 📁 directory2                    # Purpose description  
+├── 📄 important-file.json          # File description
+├── 📄 config-file.js               # Configuration file purpose
+└── 📄 README.md                    # This README file
+\`\`\`
+
+Requirements:
+- Use tree structure with appropriate Unicode characters
+- Add folder (📁) and file (📄) emojis
+- Include brief descriptions for each major item
+- Focus on the most important 8-12 items
+- Make descriptions helpful for new developers
+- Use actual directories and files detected in the repository
 
 Return only the markdown content.`,
     };
