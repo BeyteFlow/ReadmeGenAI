@@ -71,10 +71,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(
-      "Initializing generator with API key length:",
-      geminiApiKey.length,
-    );
+    console.log("Initializing multi-step README generator with AI provider credentials configured");
 
     const generator = new MultiStepReadmeGenerator(
       geminiApiKey,
