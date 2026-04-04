@@ -913,10 +913,7 @@ export class SectionGenerator {
       ...config,
     };
 
-    console.log(
-      "SectionGenerator initialized with API key length:",
-      apiKey.length,
-    );
+    console.log("SectionGenerator initialized");
 
     // Test API connection on initialization
     this.testAPIConnection().catch((error) => {
