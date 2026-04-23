@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import pkg from "../../package.json";
+import { Providers } from "./providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -117,7 +118,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* JSON-LD structured data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -128,7 +128,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <Analytics />
       </body>
     </html>

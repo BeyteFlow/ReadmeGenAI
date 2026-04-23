@@ -1,23 +1,28 @@
+import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
-import { MultiStepReadmeGenerator } from "@/lib/multi-step-readme-generator";
+import { getGeminiModel } from "@/lib/gemini";
+import { getRepoSnapshot, RepoAccessError } from "@/lib/octokit";
 
 export const dynamic = "force-dynamic";
 
 /**
  * Enhanced Multi-Step README Generation Endpoint
  *
- * This endpoint uses a sophisticated multi-step approach to generate READMEs:
- * 1. Repository Analysis - Smart analysis with token-conscious filtering
- * 2. Section Planning - Dynamic sections based on project type
- * 3. Section Generation - Individual section generation within token limits
- * 4. Assembly & Validation - Retry logic and fallback mechanisms
- *
- * Fixes token limit issues from issue #101 by generating sections individually.
+ * @param {NextRequest} req - The incoming Next.js request object containing the repo URL and optional language.
+ * @returns {Promise<NextResponse>} A JSON response containing the generated Markdown or an error message.
  */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
+  let rawUrl: string;
+  let language: string;
+  let ackPrivateRepo = false;
   try {
-    const body = await request.json();
-    const { url: githubUrl } = body;
+    const body = await req.json();
+    rawUrl = body.url;
+    language = body.language || "English";
+    ackPrivateRepo = Boolean(body.ackPrivateRepo);
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
 
     // Validate required fields
     if (!githubUrl) {
@@ -59,62 +64,135 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize the multi-step generator with enhanced configuration
-    const geminiApiKey = process.env.GEMINI_API_KEY;
-    const githubToken = process.env.GITHUB_TOKEN;
-
-    if (!geminiApiKey) {
-      console.error("GEMINI_API_KEY environment variable is not set");
-      return NextResponse.json(
-        { error: "Server configuration error: Missing AI API key" },
-        { status: 500 },
-      );
-    }
-
-    console.log(
-      "Initializing multi-step README generator with AI provider credentials configured",
-    );
-
-    const generator = new MultiStepReadmeGenerator(
-      geminiApiKey,
-      githubToken, // Optional GitHub token for higher rate limits
-      {
-        maxRetries: 3,
-        maxTokensPerSection: 800, // Smaller token limit per section
-        temperature: 0.7,
-        concurrentSections: 3, // Generate multiple sections in parallel
-        enableContinuation: true, // Enable automatic continuation for truncated content
-      },
-    );
-
-    // Generate README with detailed tracking
-    const startTime = Date.now();
-    console.log("Starting multi-step README generation for", githubUrl);
-
-    const result = await generator.generateReadme(githubUrl);
-    const endTime = Date.now();
-
-    // Log generation statistics for monitoring
-    console.log("README generation completed for", githubUrl, {
-      success: result.success,
-      sectionsGenerated: result.stats.sectionsGenerated,
-      sectionsTotal: result.stats.sectionsTotal,
-      tokensUsed: result.stats.tokensUsed,
-      timeElapsed: endTime - startTime,
-      errors: result.errors.length,
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET,
     });
+    const accessToken =
+      typeof token?.accessToken === "string" ? token.accessToken : undefined;
 
-    if (!result.success) {
-      console.error("README generation failed:", result.errors);
+    const { repoInfo, repoContents } = await getRepoSnapshot(
+      owner,
+      repo,
+      accessToken,
+    );
+
+    const isPrivateRepo = Boolean(repoInfo?.private);
+    if (isPrivateRepo && !ackPrivateRepo) {
       return NextResponse.json(
         {
-          error: "Failed to generate README using multi-step pipeline",
-          details: result.errors,
-          stats: result.stats,
+          error: "private_repo_consent_required",
+          message:
+            "This repository appears to be private. Confirm consent to send private repository data to the AI model by re-submitting with { ackPrivateRepo: true }.",
+          authRequired: Boolean(accessToken),
         },
-        { status: 500 },
+        { status: 403 },
       );
     }
+
+    const files = Array.isArray(repoContents)
+      ? repoContents.map((f: { path: string }) => f.path)
+      : [];
+    const fileListString =
+      files.length > 0 ? files.join(", ") : "Standard repository structure";
+
+    // Tech Stack detection logic
+    const hasNode = files.includes("package.json");
+    const hasPython =
+      files.includes("requirements.txt") || files.includes("setup.py");
+    const hasDocker =
+      files.includes("Dockerfile") || files.includes("docker-compose.yml");
+
+    // Fix: Cleanly joined Tech Stack labels
+    const stackLabels =
+      [
+        hasNode && "Node.js Environment",
+        hasPython && "Python Environment",
+        hasDocker && "Containerized",
+      ]
+        .filter(Boolean)
+        .join(", ") || "Generic Software Environment";
+
+    // Fix: Dynamic License detection
+    const licenseName =
+      repoInfo?.license?.name ||
+      repoInfo?.license?.spdx_id ||
+      "the repository's license file";
+
+    const model = getGeminiModel();
+
+    // Fix: Prompt updated with neutral fallbacks and dynamic license
+    const prompt = `
+**Role**: You are a Principal Solutions Architect and World-Class Technical Writer. 
+**Task**: Generate a professional, high-conversion README.md for the GitHub repository: "${repo}" in the following language: **${language}**.
+
+---
+### 1. PROJECT CONTEXT (VERIFIED DATA)
+- **Project Name**: ${repo}
+- **Description**: ${repoInfo?.description || "No description provided."}
+- **Primary Language**: ${repoInfo?.language || "Language unknown"}
+- **Detected Root Files**: ${fileListString}
+- **Tech Stack Context**: ${stackLabels}
+
+---
+### 2. STRICT README STRUCTURE REQUIREMENTS
+
+1. **Visual Header**:
+   - Center-aligned H1 with project name.
+   - A compelling 1-sentence tagline describing the **Value Proposition**.
+   - A centered row of Shields.io badges (Build, License, PRs Welcome, Stars).
+
+2. **The Strategic "Why" (Overview)**:
+   - **The Problem**: Use a blockquote to describe the real-world pain point this project solves.
+   - **The Solution**: Explain how this project provides a superior outcome for the user.
+
+3. **Key Features**:
+   - Minimum 5 features. Use emojis and focus on **User Benefits**.
+
+4. **Technical Architecture**:
+   - Provide a table of the tech stack: | Technology | Purpose | Key Benefit |.
+   - Create a tree-style directory structure code block using 📁 for folders and 📄 for files based on the file manifest provided.
+
+5. **Operational Setup**:
+   - **Prerequisites**: List required runtimes.
+   - **Installation**: Provide step-by-step terminal commands. 
+     ${hasNode ? "- Use npm/yarn/pnpm since package.json was detected." : ""}
+     ${hasPython ? "- Use pip/venv since Python markers were detected." : ""}
+   - **Environment**: If any .env or config files are in the manifest, include a configuration section.
+
+6. **Community & Governance**:
+   - Professional "Contributing" section (Fork -> Branch -> PR).
+   - Detailed "License" section: Reference ${licenseName} and provide a summary of permissions.
+
+---
+### 3. TONE & STYLE
+- **Tone**: Authoritative, polished, and developer-centric.
+- **Visuals**: Extensive use of Markdown formatting.
+- **Constraint**: Return ONLY the raw Markdown. No conversational filler.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const markdown = response.text().trim();
+    const cleanMarkdown = markdown
+      .replace(/^```(markdown|md)?\n/, "")
+      .replace(/\n```$/, "");
+
+    return NextResponse.json({ markdown: cleanMarkdown });
+  } catch (error: unknown) {
+    if (error instanceof RepoAccessError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          authRequired: error.code === "AUTH_REQUIRED",
+        },
+        { status: error.status },
+      );
+    }
+
+    const message =
+      error instanceof Error ? error.message : "Internal Server Error";
+    console.error("README Generation Failed:", message);
 
     // Return successful result with enhanced metadata
     return NextResponse.json({

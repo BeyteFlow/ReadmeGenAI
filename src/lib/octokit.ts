@@ -1,58 +1,113 @@
 import { Octokit } from "octokit";
 
-let _octokit: Octokit | null = null;
+type RepoAccessErrorCode =
+  | "AUTH_REQUIRED"
+  | "NOT_FOUND"
+  | "FORBIDDEN"
+  | "UNKNOWN";
 
-export function getOctokit(): Octokit {
-  if (_octokit) return _octokit;
-
-  const auth = process.env.GITHUB_TOKEN;
-
-  _octokit = new Octokit({
-    auth: auth || undefined,
-  });
-
-  return _octokit;
-}
-
-/**
- * Fetches repository metadata (stars, description, language)
- */
-export async function getRepoData(owner: string, repo: string) {
-  const client = getOctokit();
-
-  try {
-    const { data } = await client.rest.repos.get({
-      owner,
-      repo,
-    });
-    return data;
-  } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "An unknown error occurred";
-    console.error("Error fetching GitHub repo metadata:", message);
-    return null;
+export class RepoAccessError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code: RepoAccessErrorCode,
+  ) {
+    super(message);
+    this.name = "RepoAccessError";
   }
 }
 
-/**
- * NEW: Fetches the root contents to help Gemini build the File Structure
- */
-export async function getRepoContents(owner: string, repo: string) {
-  const client = getOctokit();
+function createOctokit(accessToken?: string): Octokit {
+  return new Octokit({
+    auth: accessToken || undefined,
+    request: {
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    },
+  });
+}
+
+function toRepoAccessError(
+  error: unknown,
+  hasUserAccessToken: boolean,
+): RepoAccessError {
+  const status =
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+      ? error.status
+      : 500;
+
+  if (status === 401) {
+    return new RepoAccessError(
+      "Access token expired or invalid. Please re-authenticate with GitHub.",
+      401,
+      "AUTH_REQUIRED",
+    );
+  }
+
+  if ((status === 403 || status === 404) && !hasUserAccessToken) {
+    return new RepoAccessError(
+      "Repository not accessible. It may be private or unavailable. Log in with GitHub if you need access to a private repository.",
+      401,
+      "AUTH_REQUIRED",
+    );
+  }
+
+  if (status === 404) {
+    return new RepoAccessError(
+      "Repository not found or you do not have access to it.",
+      404,
+      "NOT_FOUND",
+    );
+  }
+
+  if (status === 403) {
+    return new RepoAccessError(
+      "GitHub denied access to this repository.",
+      403,
+      "FORBIDDEN",
+    );
+  }
+
+  const message =
+    error instanceof Error ? error.message : "Could not fetch repository data";
+
+  return new RepoAccessError(message, status, "UNKNOWN");
+}
+
+export async function getRepoSnapshot(
+  owner: string,
+  repo: string,
+  accessToken?: string,
+) {
+  const client = createOctokit(accessToken);
 
   try {
-    const { data } = await client.rest.repos.getContent({
+    const { data: repoInfo } = await client.rest.repos.get({
       owner,
       repo,
-      path: "", // Root directory
     });
 
-    // Return the array of files/folders
-    return Array.isArray(data) ? data : [];
+    const { data: repoTree } = await client.rest.git.getTree({
+      owner,
+      repo,
+      tree_sha: repoInfo.default_branch,
+    });
+
+    type RepoTreeItem = (typeof repoTree.tree)[number];
+    const repoContents = repoTree.tree.filter(
+      (item): item is RepoTreeItem & { path: string } =>
+        typeof item.path === "string" && !item.path.includes("/"),
+    );
+
+    return {
+      repoInfo,
+      repoContents,
+    };
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Could not fetch contents";
-    console.error("Error fetching GitHub repo contents:", message);
-    return [];
+    throw toRepoAccessError(error, Boolean(accessToken));
   }
 }

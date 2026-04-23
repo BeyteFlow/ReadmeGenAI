@@ -2,13 +2,16 @@
 import React, { useState } from "react";
 import { Loader2, Github, AlertCircle } from "lucide-react";
 import { Button } from "../ui/Button";
-import { SUPPORTED_LANGUAGES } from "@/constants/languages";
+import GitHubLoginButton from "../GitHubLoginButton";
 
 interface SearchInputProps {
-  onGenerate: (url: string, language: string) => void;
+  onGenerate: (url: string, language: string, ackPrivateRepo: boolean) => void;
   isLoading: boolean;
   initialValue?: string; // optional initial value
   ariaLabel?: string; // optional aria-label for accessibility
+  serverError?: string | null;
+  authRequired?: boolean;
+  privateRepoConsentRequired?: boolean;
 }
 
 /**
@@ -23,11 +26,15 @@ export const SearchInput = ({
   isLoading,
   initialValue,
   ariaLabel,
+  serverError,
+  authRequired = false,
+  privateRepoConsentRequired = false,
 }: SearchInputProps) => {
   // Initialize state directly from initialValue once
   const [url, setUrl] = useState(initialValue || "");
   const [language, setLanguage] = useState("English");
   const [error, setError] = useState<string | null>(null);
+  const [ackPrivateRepo, setAckPrivateRepo] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +44,7 @@ export const SearchInput = ({
       /^https?:\/\/(www\.)?github\.com\/[\w.-]+\/[\w.-]+\/?$/;
 
     if (githubUrlPattern.test(url.trim())) {
-      onGenerate(url.trim(), language);
+      onGenerate(url.trim(), language, ackPrivateRepo);
     } else {
       setError("Please enter a valid GitHub repository URL.");
     }
@@ -98,10 +105,32 @@ export const SearchInput = ({
           </Button>
         </div>
       </form>
-      {error && (
-        <div className="mt-4 flex items-center gap-2 text-red-400 text-sm animate-in fade-in slide-in-from-top-1">
-          <AlertCircle size={14} />
-          {error}
+      {privateRepoConsentRequired && (
+        <div className="flex items-start gap-3 rounded-2xl border border-yellow-500/20 bg-yellow-500/10 px-4 py-3 text-sm text-yellow-200">
+          <input
+            id="private-repo-consent"
+            type="checkbox"
+            checked={ackPrivateRepo}
+            onChange={(e) => setAckPrivateRepo(e.target.checked)}
+            className="mt-1 h-4 w-4 accent-yellow-400"
+          />
+          <label htmlFor="private-repo-consent" className="leading-relaxed">
+            I understand this repository is private and consent to send its
+            metadata and file list to the AI model for README generation.
+          </label>
+        </div>
+      )}
+      {(error || serverError) && (
+        <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm animate-in fade-in slide-in-from-top-1">
+          <div className="flex items-center gap-2 text-red-300">
+            <AlertCircle size={14} />
+            {error || serverError}
+          </div>
+          {authRequired && Boolean(serverError) && !error && (
+            <div className="mt-3">
+              <GitHubLoginButton />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Menu, X, Github } from "lucide-react";
 import { Button } from "../ui/Button";
+import GitHubLoginButton from "../GitHubLoginButton";
 
 export const Navbar = ({
   links,
@@ -27,7 +28,7 @@ export const Navbar = ({
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center">
+        <div className="flex items-center">
           {/* Brand Logo */}
           <Link
             href="/"
@@ -43,7 +44,7 @@ export const Navbar = ({
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center justify-center space-x-1">
             {links.map((link) => (
               <a
                 key={link.name}
@@ -56,7 +57,9 @@ export const Navbar = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-1 items-center justify-end gap-3">
+            <GitHubLoginButton />
+
             {/* Using an anchor tag with button styling for the GitHub Link */}
             <a
               href="https://github.com/BeyteFlow/ReadmeGenAI"
@@ -94,9 +97,17 @@ export const Navbar = ({
               {link.name}
             </a>
           ))}
-          <Button variant="primary" className="w-full justify-center mt-4">
-            <Github size={18} /> Star our Repo
-          </Button>
+          <GitHubLoginButton onBeforeSignIn={() => setIsMenuOpen(false)} />
+          <a
+            href="https://github.com/BeyteFlow/ReadmeGenAI"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full"
+          >
+            <Button variant="primary" className="w-full justify-center mt-4">
+              <Github size={18} /> Star our Repo
+            </Button>
+          </a>
         </div>
       )}
     </nav>
