@@ -33,7 +33,7 @@
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^10",
     "eslint-config-next": "16.2.4",
     "next-sitemap": "^4.2.3",
