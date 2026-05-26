@@ -100,7 +100,11 @@ export const Navbar = ({
             </a>
           ))}
           <GitHubLoginButton onBeforeSignIn={() => setIsMenuOpen(false)} />
-          <Button asChild variant="primary" className="w-full justify-center mt-4">
+          <Button
+            asChild
+            variant="primary"
+            className="w-full justify-center mt-4"
+          >
             <a
               href="https://github.com/BeyteFlow/ReadmeGenAI"
               target="_blank"
