@@ -100,16 +100,19 @@ export const Navbar = ({
             </a>
           ))}
           <GitHubLoginButton onBeforeSignIn={() => setIsMenuOpen(false)} />
-          <a
-            href="https://github.com/BeyteFlow/ReadmeGenAI"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full"
+          <Button
+            asChild
+            variant="primary"
+            className="mt-4 w-full justify-center"
           >
-            <Button variant="primary" className="mt-4 w-full justify-center">
+            <a
+              href="https://github.com/BeyteFlow/ReadmeGenAI"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Github size={18} /> Star our Repo
-            </Button>
-          </a>
+            </a>
+          </Button>
         </div>
       )}
     </nav>
