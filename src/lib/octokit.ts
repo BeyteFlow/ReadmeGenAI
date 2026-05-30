@@ -168,7 +168,7 @@ export async function getRepoSnapshot(
         tree_sha: repoInfo.default_branch,
       }));
     } catch (initialTreeError: unknown) {
-      let resolvedTreeSha: string | undefined = undefined;
+      let resolvedTreeSha: string | undefined;
 
       try {
         const { data: branch } = await client.rest.repos.getBranch({
@@ -192,7 +192,7 @@ export async function getRepoSnapshot(
           }
         }
       } catch {
-        resolvedTreeSha = undefined;
+        // Ignore fallback resolution errors and rethrow the original tree lookup error below.
       }
 
       if (!resolvedTreeSha) {
