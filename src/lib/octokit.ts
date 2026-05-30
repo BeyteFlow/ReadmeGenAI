@@ -139,53 +139,72 @@ export async function getRepoSnapshot(
 ) {
   const client = createOctokit(accessToken);
 
+  const getNestedString = (obj: unknown, path: string[]): string | undefined => {
+    let cur: unknown = obj;
+    for (const p of path) {
+      if (
+        typeof cur === "object" &&
+        cur !== null &&
+        p in (cur as Record<string, unknown>)
+      ) {
+        cur = (cur as Record<string, unknown>)[p];
+      } else {
+        return undefined;
+      }
+    }
+    return typeof cur === "string" ? cur : undefined;
+  };
+
   try {
     const { data: repoInfo } = await client.rest.repos.get({
       owner,
       repo,
     });
-
-    // Resolve the branch to a tree SHA (default_branch is a name, not a SHA)
-    let treeSha: string | undefined = undefined;
+    let repoTree: Awaited<ReturnType<typeof client.rest.git.getTree>>["data"];
     try {
-      const { data: branch } = await client.rest.repos.getBranch({
+      ({ data: repoTree } = await client.rest.git.getTree({
         owner,
         repo,
-        branch: repoInfo.default_branch,
-      });
+        tree_sha: repoInfo.default_branch,
+      }));
+    } catch (initialTreeError: unknown) {
+      let resolvedTreeSha: string | undefined = undefined;
 
-      const getNestedString = (
-        obj: unknown,
-        path: string[],
-      ): string | undefined => {
-        let cur: unknown = obj;
-        for (const p of path) {
-          if (
-            typeof cur === "object" &&
-            cur !== null &&
-            p in (cur as Record<string, unknown>)
-          ) {
-            cur = (cur as Record<string, unknown>)[p];
-          } else {
-            return undefined;
+      try {
+        const { data: branch } = await client.rest.repos.getBranch({
+          owner,
+          repo,
+          branch: repoInfo.default_branch,
+        });
+
+        resolvedTreeSha = getNestedString(branch, ["commit", "commit", "tree", "sha"]);
+
+        if (!resolvedTreeSha) {
+          const commitSha = getNestedString(branch, ["commit", "sha"]);
+          if (commitSha) {
+            const { data: commit } = await client.rest.git.getCommit({
+              owner,
+              repo,
+              commit_sha: commitSha,
+            });
+            resolvedTreeSha =
+              typeof commit.tree?.sha === "string" ? commit.tree.sha : undefined;
           }
         }
-        return typeof cur === "string" ? cur : undefined;
-      };
+      } catch {
+        resolvedTreeSha = undefined;
+      }
 
-      treeSha =
-        getNestedString(branch, ["commit", "commit", "tree", "sha"]) ||
-        getNestedString(branch, ["commit", "sha"]);
-    } catch {
-      // If resolving the branch fails, fall back to the previous behavior
-      treeSha = undefined;
+      if (!resolvedTreeSha) {
+        throw initialTreeError;
+      }
+
+      ({ data: repoTree } = await client.rest.git.getTree({
+        owner,
+        repo,
+        tree_sha: resolvedTreeSha,
+      }));
     }
-
-    const { data: repoTree } = await client.rest.git.getTree({
-      owner,
-      repo,
-      tree_sha: treeSha ?? repoInfo.default_branch,
-    });
 
     type RepoTreeItem = (typeof repoTree.tree)[number];
     const repoContents = repoTree.tree.filter(
