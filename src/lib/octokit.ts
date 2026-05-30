@@ -173,9 +173,21 @@ export async function getRepoSnapshot(
         return typeof cur === "string" ? cur : undefined;
       };
 
-      treeSha =
-        getNestedString(branch, ["commit", "commit", "tree", "sha"]) ||
-        getNestedString(branch, ["commit", "sha"]);
+      treeSha = getNestedString(branch, ["commit", "commit", "tree", "sha"]);
+
+      if (!treeSha) {
+        const commitSha = getNestedString(branch, ["commit", "sha"]);
+
+        if (commitSha) {
+          const { data: commit } = await client.rest.git.getCommit({
+            owner,
+            repo,
+            commit_sha: commitSha,
+          });
+
+          treeSha = commit.tree.sha;
+        }
+      }
     } catch {
       // If resolving the branch fails, fall back to the previous behavior
       treeSha = undefined;
