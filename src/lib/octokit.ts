@@ -4,6 +4,7 @@ type RepoAccessErrorCode =
   | "AUTH_REQUIRED"
   | "NOT_FOUND"
   | "FORBIDDEN"
+  | "RATE_LIMITED"
   | "UNKNOWN";
 
 export class RepoAccessError extends Error {
@@ -40,6 +41,56 @@ function toRepoAccessError(
       ? error.status
       : 500;
 
+  const responseHeaders =
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "headers" in error.response &&
+    typeof error.response.headers === "object" &&
+    error.response.headers !== null
+      ? error.response.headers
+      : undefined;
+
+  const responseMessage =
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    typeof error.response === "object" &&
+    error.response !== null &&
+    "data" in error.response &&
+    typeof error.response.data === "object" &&
+    error.response.data !== null &&
+    "message" in error.response.data &&
+    typeof error.response.data.message === "string"
+      ? error.response.data.message
+      : "";
+
+  const rateLimitRemaining =
+    responseHeaders &&
+    "x-ratelimit-remaining" in responseHeaders &&
+    responseHeaders["x-ratelimit-remaining"];
+
+  const retryAfter =
+    responseHeaders &&
+    "retry-after" in responseHeaders &&
+    responseHeaders["retry-after"];
+
+  if (
+    status === 429 ||
+    (status === 403 &&
+      (String(rateLimitRemaining) === "0" ||
+        retryAfter !== undefined ||
+        responseMessage.toLowerCase().includes("rate limit")))
+  ) {
+    return new RepoAccessError(
+      "GitHub API rate limit reached. Please wait a few minutes and try again.",
+      429,
+      "RATE_LIMITED",
+    );
+  }
+
   if (status === 401) {
     return new RepoAccessError(
       "Access token expired or invalid. Please re-authenticate with GitHub.",
@@ -58,7 +109,7 @@ function toRepoAccessError(
 
   if (status === 404) {
     return new RepoAccessError(
-      "Repository not found or you do not have access to it.",
+      "Repository not found. Please check the URL and try again.",
       404,
       "NOT_FOUND",
     );
