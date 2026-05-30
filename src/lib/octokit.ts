@@ -84,7 +84,8 @@ function toRepoAccessError(
     (status === 403 &&
       (String(rateLimitRemaining) === "0" ||
         retryAfter !== undefined ||
-        (typeof responseMessage === "string" && responseMessage.toLowerCase().includes("rate limit"))))
+        (typeof responseMessage === "string" &&
+          responseMessage.toLowerCase().includes("rate limit"))))
   ) {
     return new RepoAccessError(
       "GitHub API rate limit reached. Please wait a few minutes and try again.",
@@ -153,10 +154,17 @@ export async function getRepoSnapshot(
         branch: repoInfo.default_branch,
       });
 
-      const getNestedString = (obj: unknown, path: string[]): string | undefined => {
+      const getNestedString = (
+        obj: unknown,
+        path: string[],
+      ): string | undefined => {
         let cur: unknown = obj;
         for (const p of path) {
-          if (typeof cur === "object" && cur !== null && p in (cur as Record<string, unknown>)) {
+          if (
+            typeof cur === "object" &&
+            cur !== null &&
+            p in (cur as Record<string, unknown>)
+          ) {
             cur = (cur as Record<string, unknown>)[p];
           } else {
             return undefined;
