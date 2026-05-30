@@ -50,7 +50,7 @@ function toRepoAccessError(
     "headers" in error.response &&
     typeof error.response.headers === "object" &&
     error.response.headers !== null
-      ? error.response.headers
+      ? (error.response.headers as Record<string, unknown>)
       : undefined;
 
   const responseMessage =
@@ -67,22 +67,24 @@ function toRepoAccessError(
       ? error.response.data.message
       : "";
 
-  const rateLimitRemaining =
-    responseHeaders &&
-    "x-ratelimit-remaining" in responseHeaders &&
-    responseHeaders["x-ratelimit-remaining"];
+  // Normalize header lookup to be case-insensitive
+  const getHeader = (name: string) => {
+    if (!responseHeaders) return undefined;
+    const found = Object.keys(responseHeaders).find(
+      (k) => k.toLowerCase() === name.toLowerCase(),
+    );
+    return found ? responseHeaders[found] : undefined;
+  };
 
-  const retryAfter =
-    responseHeaders &&
-    "retry-after" in responseHeaders &&
-    responseHeaders["retry-after"];
+  const rateLimitRemaining = getHeader("x-ratelimit-remaining");
+  const retryAfter = getHeader("retry-after");
 
   if (
     status === 429 ||
     (status === 403 &&
       (String(rateLimitRemaining) === "0" ||
         retryAfter !== undefined ||
-        responseMessage.toLowerCase().includes("rate limit")))
+        (typeof responseMessage === "string" && responseMessage.toLowerCase().includes("rate limit"))))
   ) {
     return new RepoAccessError(
       "GitHub API rate limit reached. Please wait a few minutes and try again.",
@@ -99,10 +101,10 @@ function toRepoAccessError(
     );
   }
 
-  if ((status === 403 || status === 404) && !hasUserAccessToken) {
+  if (status === 403 && !hasUserAccessToken) {
     return new RepoAccessError(
       "Repository not accessible. It may be private or unavailable. Log in with GitHub if you need access to a private repository.",
-      401,
+      403,
       "AUTH_REQUIRED",
     );
   }
@@ -142,10 +144,39 @@ export async function getRepoSnapshot(
       repo,
     });
 
+    // Resolve the branch to a tree SHA (default_branch is a name, not a SHA)
+    let treeSha: string | undefined = undefined;
+    try {
+      const { data: branch } = await client.rest.repos.getBranch({
+        owner,
+        repo,
+        branch: repoInfo.default_branch,
+      });
+
+      const getNestedString = (obj: unknown, path: string[]): string | undefined => {
+        let cur: unknown = obj;
+        for (const p of path) {
+          if (typeof cur === "object" && cur !== null && p in (cur as Record<string, unknown>)) {
+            cur = (cur as Record<string, unknown>)[p];
+          } else {
+            return undefined;
+          }
+        }
+        return typeof cur === "string" ? cur : undefined;
+      };
+
+      treeSha =
+        getNestedString(branch, ["commit", "commit", "tree", "sha"]) ||
+        getNestedString(branch, ["commit", "sha"]);
+    } catch {
+      // If resolving the branch fails, fall back to the previous behavior
+      treeSha = undefined;
+    }
+
     const { data: repoTree } = await client.rest.git.getTree({
       owner,
       repo,
-      tree_sha: repoInfo.default_branch,
+      tree_sha: treeSha ?? repoInfo.default_branch,
     });
 
     type RepoTreeItem = (typeof repoTree.tree)[number];
