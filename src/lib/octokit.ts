@@ -139,7 +139,10 @@ export async function getRepoSnapshot(
 ) {
   const client = createOctokit(accessToken);
 
-  const getNestedString = (obj: unknown, path: string[]): string | undefined => {
+  const getNestedString = (
+    obj: unknown,
+    path: string[],
+  ): string | undefined => {
     let cur: unknown = obj;
     for (const p of path) {
       if (
@@ -177,7 +180,12 @@ export async function getRepoSnapshot(
           branch: repoInfo.default_branch,
         });
 
-        resolvedTreeSha = getNestedString(branch, ["commit", "commit", "tree", "sha"]);
+        resolvedTreeSha = getNestedString(branch, [
+          "commit",
+          "commit",
+          "tree",
+          "sha",
+        ]);
 
         if (!resolvedTreeSha) {
           const commitSha = getNestedString(branch, ["commit", "sha"]);
@@ -188,7 +196,9 @@ export async function getRepoSnapshot(
               commit_sha: commitSha,
             });
             resolvedTreeSha =
-              typeof commit.tree?.sha === "string" ? commit.tree.sha : undefined;
+              typeof commit.tree?.sha === "string"
+                ? commit.tree.sha
+                : undefined;
           }
         }
       } catch {
