@@ -16,7 +16,7 @@ jobs:
 
       - name: Apply labels based on keywords
         env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{github.token }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
