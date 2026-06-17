@@ -109,6 +109,9 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
       <Navbar links={navLinks} />
 
       <main className="pt-40 pb-20 px-4 max-w-6xl mx-auto">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-10 text-center">
+          Generate Your AI-Powered README
+        </h1>
         <SearchInput
           onGenerate={handleGenerate}
           isLoading={isLoading}
