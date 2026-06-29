@@ -1,11 +1,7 @@
 import { Octokit } from "octokit";
 
 type RepoAccessErrorCode =
-  | "AUTH_REQUIRED"
-  | "NOT_FOUND"
-  | "FORBIDDEN"
-  | "RATE_LIMITED"
-  | "UNKNOWN";
+  "AUTH_REQUIRED" | "NOT_FOUND" | "FORBIDDEN" | "RATE_LIMITED" | "UNKNOWN";
 
 export class RepoAccessError extends Error {
   constructor(
