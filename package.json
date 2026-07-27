@@ -15,7 +15,7 @@
     "@vercel/analytics": "^2.0.1",
     "lucide-react": "^0.577.0",
     "next": "^16.2.10",
-    "next-auth": "^4.24.14",
+    "next-auth": "^4.24.15",
     "octokit": "^5.0.5",
     "react": "19.2.7",
     "react-dom": "19.2.6",
