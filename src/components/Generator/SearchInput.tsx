@@ -213,7 +213,14 @@ export const SearchInput = ({
                           : "Generation failed"}
                 </span>
               </div>
-              <p className="mt-1 leading-relaxed text-red-100/80">
+              <p
+                className={`mt-1 leading-relaxed ${
+                  serverErrorCode === "rate_limited" ||
+                  serverErrorCode === "timeout"
+                    ? "text-amber-100/90"
+                    : "text-red-100/80"
+                }`}
+              >
                 {serverError}
               </p>
             </>

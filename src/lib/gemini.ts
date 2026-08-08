@@ -5,6 +5,7 @@ import {
   GenerativeModel,
   GoogleGenerativeAIFetchError,
   GoogleGenerativeAIAbortError,
+  GoogleGenerativeAIResponseError,
 } from "@google/generative-ai";
 
 let _model: GenerativeModel | null = null;
@@ -59,6 +60,15 @@ export function classifyModelGenerationError(
       status: 504,
       message:
         "The AI model took too long to respond. Please wait a moment and try again.",
+    };
+  }
+
+  if (error instanceof GoogleGenerativeAIResponseError) {
+    return {
+      kind: "model_error",
+      status: 502,
+      message:
+        "The AI model returned an unreadable or blocked response. Please try again.",
     };
   }
 

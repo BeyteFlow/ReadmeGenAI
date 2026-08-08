@@ -37,6 +37,29 @@ function createOctokit(
   });
 }
 
+export function formatRateLimitReset(resetEpochSeconds: number): string {
+  const waitSeconds = Math.max(
+    0,
+    Math.ceil(resetEpochSeconds - Date.now() / 1000),
+  );
+
+  if (waitSeconds === 0) {
+    return "Retry now.";
+  }
+
+  if (waitSeconds < 60) {
+    return `Retry in about ${waitSeconds} second${waitSeconds === 1 ? "" : "s"}.`;
+  }
+
+  const waitMinutes = Math.max(1, Math.ceil(waitSeconds / 60));
+  if (waitMinutes < 60) {
+    return `Retry in about ${waitMinutes} minute${waitMinutes === 1 ? "" : "s"}.`;
+  }
+
+  const waitHours = Math.ceil(waitMinutes / 60);
+  return `Retry in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.`;
+}
+
 function toRepoAccessError(
   error: unknown,
   hasUserAccessToken: boolean,
@@ -132,7 +155,7 @@ function toRepoAccessError(
       typeof rateLimitReset === "string" ? parseInt(rateLimitReset, 10) : NaN;
 
     const resetHint = Number.isFinite(resetSeconds)
-      ? `Retry after ${new Date(resetSeconds * 1000).toLocaleTimeString()}.`
+      ? formatRateLimitReset(resetSeconds)
       : "Please wait a few minutes and try again.";
 
     return new RepoAccessError(
