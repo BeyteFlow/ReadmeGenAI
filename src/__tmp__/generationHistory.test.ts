@@ -176,7 +176,9 @@ describe("saveHistory", () => {
   });
 
   it("returns null when no storage is available", () => {
-    expect(saveHistory([makeEntry("https://github.com/a/b", "English")], null)).toBeNull();
+    expect(
+      saveHistory([makeEntry("https://github.com/a/b", "English")], null),
+    ).toBeNull();
   });
 
   it("returns the persisted subset when the quota forces eviction", () => {
