@@ -1,6 +1,10 @@
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
-import { getGeminiModel } from "@/lib/gemini";
+import {
+  getGeminiModel,
+  GEMINI_GENERATION_TIMEOUT_MS,
+  classifyModelGenerationError,
+} from "@/lib/gemini";
 import { getRepoSnapshot, RepoAccessError } from "@/lib/octokit";
 
 export const dynamic = "force-dynamic";
@@ -172,7 +176,9 @@ export async function POST(req: NextRequest) {
 - **Constraint**: Return ONLY the raw Markdown. No conversational filler.
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(prompt, {
+      timeout: GEMINI_GENERATION_TIMEOUT_MS,
+    });
     const response = await result.response;
     const markdown = response.text().trim();
     const cleanMarkdown = markdown
@@ -184,10 +190,37 @@ export async function POST(req: NextRequest) {
     if (error instanceof RepoAccessError) {
       return NextResponse.json(
         {
-          error: error.message,
+          error: error.code,
+          message: error.message,
           authRequired: error.code === "AUTH_REQUIRED",
         },
         { status: error.status },
+      );
+    }
+
+    const failure = classifyModelGenerationError(error);
+
+    if (failure.kind === "rate_limited") {
+      console.error("README Generation Rate Limited:", error);
+      return NextResponse.json(
+        { error: "rate_limited", message: failure.message },
+        { status: 429 },
+      );
+    }
+
+    if (failure.kind === "timeout") {
+      console.error("README Generation Timed Out:", error);
+      return NextResponse.json(
+        { error: "timeout", message: failure.message },
+        { status: 504 },
+      );
+    }
+
+    if (failure.kind === "model_error") {
+      console.error("AI Model Generation Failed:", error);
+      return NextResponse.json(
+        { error: "model_error", message: failure.message },
+        { status: failure.status },
       );
     }
 
