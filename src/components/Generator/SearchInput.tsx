@@ -9,6 +9,7 @@ interface SearchInputProps {
   onClearPrivateRepoConsent: () => void;
   isLoading: boolean;
   initialValue?: string; // optional initial value
+  initialLanguage?: string; // optional initial language
   ariaLabel?: string; // optional aria-label for accessibility
   serverError?: string | null;
   authRequired?: boolean;
@@ -28,6 +29,7 @@ export const SearchInput = ({
   onClearPrivateRepoConsent,
   isLoading,
   initialValue,
+  initialLanguage,
   ariaLabel,
   serverError,
   authRequired = false,
@@ -36,7 +38,7 @@ export const SearchInput = ({
 }: SearchInputProps) => {
   // Initialize state directly from initialValue once
   const [url, setUrl] = useState(initialValue || "");
-  const [language, setLanguage] = useState("English");
+  const [language, setLanguage] = useState(initialLanguage || "English");
   const [error, setError] = useState<string | null>(null);
   const [ackPrivateRepo, setAckPrivateRepo] = useState(false);
 
