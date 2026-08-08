@@ -1,12 +1,21 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SearchInput } from "@/components/Generator/SearchInput";
 import { MarkdownPreview } from "@/components/Generator/MarkdownPreview";
+import { GenerationHistory } from "@/components/Generator/GenerationHistory";
 import LoadingOverlay from "@/components/Generator/LoadingOverlay";
 import { navLinks } from "@/constants/navLinks";
 import { TerminalMockup } from "@/components/sections/TerminalMockup";
+import {
+  appendGeneration,
+  clearHistory,
+  loadHistory,
+  saveHistory,
+  GENERATION_HISTORY_KEY,
+  type GenerationHistoryEntry,
+} from "@/lib/generationHistory";
 
 interface GeneratePageProps {
   repoSlug?: string;
@@ -20,6 +29,13 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
   const [authRequired, setAuthRequired] = useState(false);
   const [privateRepoConsentRequired, setPrivateRepoConsentRequired] =
     useState(false);
+  const [history, setHistory] = useState<GenerationHistoryEntry[]>([]);
+  const [restoredForm, setRestoredForm] = useState<{
+    url: string;
+    language: string;
+  } | null>(null);
+  const [restoreKey, setRestoreKey] = useState(0);
+  const previewRef = useRef<HTMLDivElement>(null);
 
   // Optional: Update document title for SPA navigation
   useEffect(() => {
@@ -30,6 +46,18 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
       document.title = "ReadmeGenAI – AI GitHub README Generator";
     }
   }, [repoSlug]);
+
+  useEffect(() => {
+    setHistory(loadHistory());
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === GENERATION_HISTORY_KEY) {
+        setHistory(loadHistory());
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
 
   const handleGenerate = async (
     githubUrl: string,
@@ -83,6 +111,16 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
       const data = await response.json();
       if (data && typeof data.markdown === "string") {
         setMarkdown(data.markdown);
+        setHistory((prev) => {
+          const next = appendGeneration(
+            prev,
+            githubUrl,
+            language,
+            data.markdown,
+          );
+          saveHistory(next);
+          return next;
+        });
       } else {
         setMarkdown("");
         throw new Error(
@@ -106,6 +144,25 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
     setAuthRequired(false);
   };
 
+  const handleRestoreGeneration = (entry: GenerationHistoryEntry) => {
+    setRestoredForm({ url: entry.url, language: entry.language });
+    setRestoreKey((key) => key + 1);
+    setMarkdown(entry.markdown);
+    setErrorMessage(null);
+    setErrorCode(null);
+    setAuthRequired(false);
+    setPrivateRepoConsentRequired(false);
+    previewRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const handleClearHistory = () => {
+    setHistory([]);
+    clearHistory();
+  };
+
   return (
     <div className="relative min-h-screen bg-black text-white">
       {/* UI LOADING OVERLAY 
@@ -120,9 +177,14 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
           Generate Your AI-Powered README
         </h1>
         <SearchInput
+          key={`${restoreKey}|${restoredForm?.url ?? ""}|${restoredForm?.language ?? ""}`}
           onGenerate={handleGenerate}
           isLoading={isLoading}
-          initialValue={repoSlug ? `https://github.com/${repoSlug}` : ""}
+          initialValue={
+            restoredForm?.url ??
+            (repoSlug ? `https://github.com/${repoSlug}` : "")
+          }
+          initialLanguage={restoredForm?.language ?? "English"}
           ariaLabel="Enter GitHub repository URL to generate README"
           serverError={errorMessage}
           authRequired={authRequired}
@@ -130,7 +192,17 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
           privateRepoConsentRequired={privateRepoConsentRequired}
           onClearPrivateRepoConsent={clearGenerateFormState}
         />
-        <MarkdownPreview content={markdown} />
+        <div className="mt-4">
+          <GenerationHistory
+            entries={history}
+            activeUrl={restoredForm?.url}
+            onRestore={handleRestoreGeneration}
+            onClearAll={handleClearHistory}
+          />
+        </div>
+        <div ref={previewRef} className="scroll-mt-24">
+          <MarkdownPreview content={markdown} />
+        </div>
       </main>
       <TerminalMockup />
       <Footer />
