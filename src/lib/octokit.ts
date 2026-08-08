@@ -34,10 +34,17 @@ function createOctokit(
       },
       signal: requestSignal,
     },
+    retry: {
+      doNotRetry: [400, 401, 403, 404, 410, 422, 429, 451],
+    },
+    throttle: {
+      onRateLimit: () => false,
+      onSecondaryRateLimit: () => false,
+    },
   });
 }
 
-export function formatRateLimitReset(resetEpochSeconds: number): string {
+function formatRateLimitReset(resetEpochSeconds: number): string {
   const waitSeconds = Math.max(
     0,
     Math.ceil(resetEpochSeconds - Date.now() / 1000),
@@ -58,6 +65,21 @@ export function formatRateLimitReset(resetEpochSeconds: number): string {
 
   const waitHours = Math.ceil(waitMinutes / 60);
   return `Retry in about ${waitHours} hour${waitHours === 1 ? "" : "s"}.`;
+}
+
+function formatRetryAfter(retryAfter: unknown): string | null {
+  if (typeof retryAfter !== "string") return null;
+
+  const seconds = parseFloat(retryAfter);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+
+  const rounded = Math.max(1, Math.round(seconds));
+  if (rounded < 60) {
+    return `Retry in about ${rounded} second${rounded === 1 ? "" : "s"}.`;
+  }
+
+  const minutes = Math.max(1, Math.ceil(rounded / 60));
+  return `Retry in about ${minutes} minute${minutes === 1 ? "" : "s"}.`;
 }
 
 function toRepoAccessError(
@@ -156,7 +178,8 @@ function toRepoAccessError(
 
     const resetHint = Number.isFinite(resetSeconds)
       ? formatRateLimitReset(resetSeconds)
-      : "Please wait a few minutes and try again.";
+      : formatRetryAfter(retryAfter) ??
+        "Please wait a few minutes and try again.";
 
     return new RepoAccessError(
       `GitHub API rate limit reached. ${resetHint}`,
