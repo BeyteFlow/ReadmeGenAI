@@ -119,7 +119,9 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
           data.markdown,
         );
         const persisted = saveHistory(nextHistory);
-        setHistory(persisted ?? nextHistory);
+        const committedHistory = persisted ?? nextHistory;
+        setHistory(committedHistory);
+        setActiveHistoryEntryId(committedHistory[0]?.id);
       } else {
         setMarkdown("");
         throw new Error(
