@@ -13,10 +13,7 @@ interface GenerationHistoryProps {
 }
 
 function formatRelativeTime(timestamp: number): string {
-  const diffSeconds = Math.max(
-    0,
-    Math.floor((Date.now() - timestamp) / 1000),
-  );
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
   if (diffSeconds < 60) return "just now";
 
   const minutes = Math.floor(diffSeconds / 60);
@@ -115,10 +112,7 @@ export const GenerationHistory = ({
                     isActive ? "bg-blue-500/10" : ""
                   }`}
                 >
-                  <RotateCcw
-                    size={14}
-                    className="shrink-0 text-zinc-500"
-                  />
+                  <RotateCcw size={14} className="shrink-0 text-zinc-500" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-mono text-xs text-zinc-200">
                       {entry.url}

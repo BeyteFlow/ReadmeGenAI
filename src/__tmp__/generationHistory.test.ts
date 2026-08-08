@@ -32,7 +32,11 @@ function createFakeStorage(initial?: Record<string, string>): FakeStorage {
   };
 }
 
-function makeEntry(url: string, language = "English", markdown = "# Readme"): GenerationHistoryEntry {
+function makeEntry(
+  url: string,
+  language = "English",
+  markdown = "# Readme",
+): GenerationHistoryEntry {
   return {
     id: `id-${url}-${language}`,
     url,
@@ -44,7 +48,12 @@ function makeEntry(url: string, language = "English", markdown = "# Readme"): Ge
 
 describe("appendGeneration", () => {
   it("adds a new entry at the front and normalizes the URL", () => {
-    const next = appendGeneration([], "  https://github.com/Owner/Repo/ ", "English", "# Hi");
+    const next = appendGeneration(
+      [],
+      "  https://github.com/Owner/Repo/ ",
+      "English",
+      "# Hi",
+    );
     expect(next).toHaveLength(1);
     expect(next[0].url).toBe("https://github.com/Owner/Repo");
     expect(next[0].language).toBe("English");
@@ -55,7 +64,13 @@ describe("appendGeneration", () => {
     const first = [makeEntry("https://github.com/a/b", "English")];
     const oldDate = 100;
     const firstWithDate = [{ ...first[0], createdAt: oldDate }];
-    const next = appendGeneration(firstWithDate, "https://github.com/A/B", "English", "# v2", 500);
+    const next = appendGeneration(
+      firstWithDate,
+      "https://github.com/A/B",
+      "English",
+      "# v2",
+      500,
+    );
     expect(next).toHaveLength(1);
     expect(next[0].markdown).toBe("# v2");
     expect(next[0].createdAt).toBe(500);
@@ -74,15 +89,27 @@ describe("appendGeneration", () => {
   it("evicts the oldest entries beyond the maximum", () => {
     let entries: GenerationHistoryEntry[] = [];
     for (let i = 0; i < MAX_HISTORY_ENTRIES + 5; i++) {
-      entries = appendGeneration(entries, `https://github.com/owner/repo${i}`, "English", "# x");
+      entries = appendGeneration(
+        entries,
+        `https://github.com/owner/repo${i}`,
+        "English",
+        "# x",
+      );
     }
     expect(entries).toHaveLength(MAX_HISTORY_ENTRIES);
-    expect(entries[0].url).toBe(`https://github.com/owner/repo${MAX_HISTORY_ENTRIES + 4}`);
+    expect(entries[0].url).toBe(
+      `https://github.com/owner/repo${MAX_HISTORY_ENTRIES + 4}`,
+    );
   });
 
   it("truncates oversized markdown", () => {
     const hugeMarkdown = "x".repeat(MAX_MARKDOWN_CHARS + 500);
-    const next = appendGeneration([], "https://github.com/a/b", "English", hugeMarkdown);
+    const next = appendGeneration(
+      [],
+      "https://github.com/a/b",
+      "English",
+      hugeMarkdown,
+    );
     expect(next[0].markdown.length).toBe(MAX_MARKDOWN_CHARS);
   });
 });
@@ -93,12 +120,16 @@ describe("loadHistory", () => {
   });
 
   it("returns [] for corrupt JSON", () => {
-    const storage = createFakeStorage({ [GENERATION_HISTORY_KEY]: "{not json" });
+    const storage = createFakeStorage({
+      [GENERATION_HISTORY_KEY]: "{not json",
+    });
     expect(loadHistory(storage)).toEqual([]);
   });
 
   it("returns [] when the payload is not an array", () => {
-    const storage = createFakeStorage({ [GENERATION_HISTORY_KEY]: JSON.stringify({ url: "x" }) });
+    const storage = createFakeStorage({
+      [GENERATION_HISTORY_KEY]: JSON.stringify({ url: "x" }),
+    });
     expect(loadHistory(storage)).toEqual([]);
   });
 
@@ -120,13 +151,18 @@ describe("loadHistory", () => {
   it("enforces the entry cap and markdown cap on load", () => {
     const many = Array.from({ length: MAX_HISTORY_ENTRIES + 5 }, (_, i) =>
       makeEntry(`https://github.com/o/r${i}`),
-    ).map((entry) => ({ ...entry, markdown: entry.markdown.repeat(MAX_MARKDOWN_CHARS) }));
+    ).map((entry) => ({
+      ...entry,
+      markdown: entry.markdown.repeat(MAX_MARKDOWN_CHARS),
+    }));
     const storage = createFakeStorage({
       [GENERATION_HISTORY_KEY]: JSON.stringify(many),
     });
     const loaded = loadHistory(storage);
     expect(loaded).toHaveLength(MAX_HISTORY_ENTRIES);
-    expect(loaded.every((entry) => entry.markdown.length <= MAX_MARKDOWN_CHARS)).toBe(true);
+    expect(
+      loaded.every((entry) => entry.markdown.length <= MAX_MARKDOWN_CHARS),
+    ).toBe(true);
   });
 });
 
@@ -157,7 +193,12 @@ describe("saveHistory", () => {
 
     let entries: GenerationHistoryEntry[] = [];
     for (let i = 0; i < 6; i++) {
-      entries = appendGeneration(entries, `https://github.com/owner/repo${i}`, "English", "# x");
+      entries = appendGeneration(
+        entries,
+        `https://github.com/owner/repo${i}`,
+        "English",
+        "# x",
+      );
     }
     expect(entries).toHaveLength(6);
 
@@ -180,7 +221,11 @@ describe("removeHistoryEntry", () => {
 
 describe("clearHistory", () => {
   it("removes the stored key", () => {
-    const storage = createFakeStorage({ [GENERATION_HISTORY_KEY]: JSON.stringify([makeEntry("https://github.com/a/b")]) });
+    const storage = createFakeStorage({
+      [GENERATION_HISTORY_KEY]: JSON.stringify([
+        makeEntry("https://github.com/a/b"),
+      ]),
+    });
     clearHistory(storage);
     expect(storage.dump()).toEqual({});
   });

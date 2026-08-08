@@ -127,9 +127,7 @@ export function saveHistory(
   }
 }
 
-export function clearHistory(
-  storage: StorageLike | null = getStorage(),
-): void {
+export function clearHistory(storage: StorageLike | null = getStorage()): void {
   if (!storage) return;
   try {
     storage.removeItem(GENERATION_HISTORY_KEY);
