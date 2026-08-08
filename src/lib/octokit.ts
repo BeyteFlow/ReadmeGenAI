@@ -178,8 +178,8 @@ function toRepoAccessError(
 
     const resetHint = Number.isFinite(resetSeconds)
       ? formatRateLimitReset(resetSeconds)
-      : formatRetryAfter(retryAfter) ??
-        "Please wait a few minutes and try again.";
+      : (formatRetryAfter(retryAfter) ??
+        "Please wait a few minutes and try again.");
 
     return new RepoAccessError(
       `GitHub API rate limit reached. ${resetHint}`,
