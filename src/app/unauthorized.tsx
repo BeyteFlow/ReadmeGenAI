@@ -39,15 +39,16 @@ export default function Unauthorized() {
             Sign in with GitHub
           </Button>
 
-          <Link href="/">
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto px-10 py-4 text-lg"
-            >
+          <Button
+            variant="outline"
+            asChild
+            className="w-full sm:w-auto px-10 py-4 text-lg"
+          >
+            <Link href="/">
               <Home size={20} />
               Return Home
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         <div className="w-full max-w-3xl bg-[#0a0a0a] border border-white/10 rounded-xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-1000">

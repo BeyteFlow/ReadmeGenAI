@@ -29,15 +29,16 @@ export default function Forbidden() {
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-in fade-in slide-in-from-bottom-6 duration-1000">
-          <Link href="/">
-            <Button
-              variant="primary"
-              className="w-full sm:w-auto px-10 py-4 text-lg shadow-xl shadow-red-500/10"
-            >
+          <Button
+            variant="primary"
+            asChild
+            className="w-full sm:w-auto px-10 py-4 text-lg shadow-xl shadow-red-500/10"
+          >
+            <Link href="/">
               <Home size={20} />
               Back to Safety
-            </Button>
-          </Link>
+            </Link>
+          </Button>
 
           <Button
             variant="outline"
