@@ -30,6 +30,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
   const [privateRepoConsentRequired, setPrivateRepoConsentRequired] =
     useState(false);
   const [history, setHistory] = useState<GenerationHistoryEntry[]>([]);
+  const [activeHistoryEntryId, setActiveHistoryEntryId] = useState<string>();
   const [restoredForm, setRestoredForm] = useState<{
     url: string;
     language: string;
@@ -111,16 +112,14 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
       const data = await response.json();
       if (data && typeof data.markdown === "string") {
         setMarkdown(data.markdown);
-        setHistory((prev) => {
-          const next = appendGeneration(
-            prev,
-            githubUrl,
-            language,
-            data.markdown,
-          );
-          saveHistory(next);
-          return next;
-        });
+        const nextHistory = appendGeneration(
+          history,
+          githubUrl,
+          language,
+          data.markdown,
+        );
+        const persisted = saveHistory(nextHistory);
+        setHistory(persisted ?? nextHistory);
       } else {
         setMarkdown("");
         throw new Error(
@@ -146,6 +145,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
 
   const handleRestoreGeneration = (entry: GenerationHistoryEntry) => {
     setRestoredForm({ url: entry.url, language: entry.language });
+    setActiveHistoryEntryId(entry.id);
     setRestoreKey((key) => key + 1);
     setMarkdown(entry.markdown);
     setErrorMessage(null);
@@ -195,7 +195,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
         <div className="mt-4">
           <GenerationHistory
             entries={history}
-            activeUrl={restoredForm?.url}
+            activeEntryId={activeHistoryEntryId}
             onRestore={handleRestoreGeneration}
             onClearAll={handleClearHistory}
           />

@@ -170,11 +170,16 @@ describe("saveHistory", () => {
   it("round-trips entries through localStorage", () => {
     const storage = createFakeStorage();
     const entries = [makeEntry("https://github.com/a/b", "English")];
-    saveHistory(entries, storage);
+    const persisted = saveHistory(entries, storage);
+    expect(persisted).toEqual(entries);
     expect(loadHistory(storage)).toEqual(entries);
   });
 
-  it("shrinks the payload when the quota is exceeded", () => {
+  it("returns null when no storage is available", () => {
+    expect(saveHistory([makeEntry("https://github.com/a/b", "English")], null)).toBeNull();
+  });
+
+  it("returns the persisted subset when the quota forces eviction", () => {
     const store = new Map<string, string>();
     const storage: FakeStorage = {
       getItem: (key) => store.get(key) ?? null,
@@ -202,8 +207,10 @@ describe("saveHistory", () => {
     }
     expect(entries).toHaveLength(6);
 
-    expect(() => saveHistory(entries, storage)).not.toThrow();
-    expect(loadHistory(storage).length).toBeLessThan(6);
+    const persisted = saveHistory(entries, storage);
+    expect(persisted).not.toBeNull();
+    expect(persisted!.length).toBeLessThan(6);
+    expect(persisted).toEqual(loadHistory(storage));
   });
 });
 

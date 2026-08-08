@@ -3,11 +3,10 @@
 import React, { useState } from "react";
 import { ChevronDown, Clock, History, RotateCcw, Trash2 } from "lucide-react";
 import type { GenerationHistoryEntry } from "@/lib/generationHistory";
-import { normalizeRepoUrl } from "@/lib/generationHistory";
 
 interface GenerationHistoryProps {
   entries: GenerationHistoryEntry[];
-  activeUrl?: string;
+  activeEntryId?: string;
   onRestore: (entry: GenerationHistoryEntry) => void;
   onClearAll: () => void;
 }
@@ -28,7 +27,7 @@ function formatRelativeTime(timestamp: number): string {
 
 export const GenerationHistory = ({
   entries,
-  activeUrl,
+  activeEntryId,
   onRestore,
   onClearAll,
 }: GenerationHistoryProps) => {
@@ -45,8 +44,6 @@ export const GenerationHistory = ({
     setConfirmClear(false);
     onClearAll();
   };
-
-  const activeUrlForCompare = activeUrl ? urlForCompare(activeUrl) : "";
 
   return (
     <div className="w-full rounded-2xl border border-white/10 bg-zinc-900/40 backdrop-blur-xl overflow-hidden">
@@ -99,7 +96,7 @@ export const GenerationHistory = ({
       {open && (
         <ul className="divide-y divide-white/5 border-t border-white/10">
           {entries.map((entry) => {
-            const isActive = urlForCompare(entry.url) === activeUrlForCompare;
+            const isActive = entry.id === activeEntryId;
             return (
               <li key={entry.id}>
                 <button
@@ -139,9 +136,5 @@ export const GenerationHistory = ({
     </div>
   );
 };
-
-function urlForCompare(url: string): string {
-  return normalizeRepoUrl(url).toLowerCase();
-}
 
 export default GenerationHistory;

@@ -16,8 +16,11 @@ type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 function getStorage(): StorageLike | null {
   if (typeof globalThis === "undefined") return null;
-  const storage = (globalThis as { localStorage?: StorageLike }).localStorage;
-  return storage ?? null;
+  try {
+    return (globalThis as { localStorage?: StorageLike }).localStorage ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function createId(): string {
@@ -113,15 +116,15 @@ export function removeHistoryEntry(
 export function saveHistory(
   entries: GenerationHistoryEntry[],
   storage: StorageLike | null = getStorage(),
-): void {
-  if (!storage) return;
+): GenerationHistoryEntry[] | null {
+  if (!storage) return null;
   let pool = entries;
   for (;;) {
     try {
       storage.setItem(GENERATION_HISTORY_KEY, JSON.stringify(pool));
-      return;
+      return pool;
     } catch {
-      if (pool.length <= 1) return;
+      if (pool.length <= 1) return null;
       pool = pool.slice(0, Math.ceil(pool.length / 2));
     }
   }
