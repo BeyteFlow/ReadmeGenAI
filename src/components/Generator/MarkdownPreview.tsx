@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
-import { Copy, Check, FileCode } from "lucide-react";
+import { Copy, Check, Download, FileCode } from "lucide-react";
 
 export const MarkdownPreview = ({ content }: { content: string }) => {
   const [view, setView] = useState<"code" | "preview">("preview");
@@ -20,6 +20,18 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
       console.error("Failed to copy to clipboard:", error);
       setCopied(false);
     }
+  };
+
+  const handleDownload = () => {
+    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "README.md";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (!content) return null;
@@ -120,13 +132,22 @@ export const MarkdownPreview = ({ content }: { content: string }) => {
             </button>
           </div>
         </div>
-        <button
-          onClick={handleCopy}
-          className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
-        >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? "Copied" : "Copy"}
-        </button>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={handleCopy}
+            className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-2"
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? "Copied" : "Copy"}
+          </button>
+          <button
+            onClick={handleDownload}
+            className="text-xs text-zinc-400 hover:text-white flex items-center gap-2"
+          >
+            <Download size={14} />
+            Download
+          </button>
+        </div>
       </div>
 
       {/* Content */}
