@@ -12,6 +12,7 @@ interface SearchInputProps {
   ariaLabel?: string; // optional aria-label for accessibility
   serverError?: string | null;
   authRequired?: boolean;
+  serverErrorCode?: string | null;
   privateRepoConsentRequired?: boolean;
 }
 
@@ -30,6 +31,7 @@ export const SearchInput = ({
   ariaLabel,
   serverError,
   authRequired = false,
+  serverErrorCode = null,
   privateRepoConsentRequired = false,
 }: SearchInputProps) => {
   // Initialize state directly from initialValue once
@@ -181,11 +183,46 @@ export const SearchInput = ({
         </div>
       )}
       {(error || (serverError && !privateRepoConsentRequired)) && (
-        <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm animate-in fade-in slide-in-from-top-1">
-          <div className="flex items-center gap-2 text-red-300">
-            <AlertCircle size={14} />
-            {error || serverError}
-          </div>
+        <div
+          className={`mt-4 rounded-2xl border px-4 py-3 text-sm animate-in fade-in slide-in-from-top-1 ${
+            serverErrorCode === "rate_limited" || serverErrorCode === "timeout"
+              ? "border-amber-500/30 bg-amber-500/10"
+              : "border-red-500/20 bg-red-500/10"
+          }`}
+        >
+          {serverError ? (
+            <>
+              <div
+                className={`flex items-center gap-2 ${
+                  serverErrorCode === "rate_limited" ||
+                  serverErrorCode === "timeout"
+                    ? "text-amber-300"
+                    : "text-red-300"
+                }`}
+              >
+                <AlertCircle size={14} />
+                <span className="font-semibold">
+                  {serverErrorCode === "timeout"
+                    ? "Request timed out"
+                    : serverErrorCode === "rate_limited"
+                      ? "Rate limit reached"
+                      : serverErrorCode === "model_error"
+                        ? "AI model unavailable"
+                        : authRequired
+                          ? "GitHub authentication required"
+                          : "Generation failed"}
+                </span>
+              </div>
+              <p className="mt-1 leading-relaxed text-red-100/80">
+                {serverError}
+              </p>
+            </>
+          ) : (
+            <div className="flex items-center gap-2 text-red-300">
+              <AlertCircle size={14} />
+              {error}
+            </div>
+          )}
           {authRequired && Boolean(serverError) && !error && (
             <div className="mt-3">
               <GitHubLoginButton />

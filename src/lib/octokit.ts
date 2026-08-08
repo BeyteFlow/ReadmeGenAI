@@ -1,7 +1,15 @@
 import { Octokit } from "octokit";
 
 type RepoAccessErrorCode =
-  "AUTH_REQUIRED" | "NOT_FOUND" | "FORBIDDEN" | "RATE_LIMITED" | "UNKNOWN";
+  | "AUTH_REQUIRED"
+  | "NOT_FOUND"
+  | "FORBIDDEN"
+  | "RATE_LIMITED"
+  | "TIMEOUT"
+  | "NETWORK"
+  | "UNKNOWN";
+
+export const GITHUB_API_TIMEOUT_MS = 20_000;
 
 export class RepoAccessError extends Error {
   constructor(
@@ -14,13 +22,17 @@ export class RepoAccessError extends Error {
   }
 }
 
-function createOctokit(accessToken?: string): Octokit {
+function createOctokit(
+  accessToken?: string,
+  requestSignal?: AbortSignal,
+): Octokit {
   return new Octokit({
     auth: accessToken || undefined,
     request: {
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
+      signal: requestSignal,
     },
   });
 }
@@ -72,6 +84,38 @@ function toRepoAccessError(
     return found ? responseHeaders[found] : undefined;
   };
 
+  const isAbortOrTimeout =
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    ["AbortError", "TimeoutError"].includes(
+      String((error as { name?: unknown }).name),
+    );
+
+  if (isAbortOrTimeout) {
+    return new RepoAccessError(
+      "GitHub took too long to respond. Please try again in a moment.",
+      504,
+      "TIMEOUT",
+    );
+  }
+
+  const rawErrorMessage =
+    error instanceof Error ? error.message : responseMessage;
+
+  if (
+    typeof rawErrorMessage === "string" &&
+    /(ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ECONNRESET|ENETUNREACH|ETIMEDOUT|fetch failed)/i.test(
+      rawErrorMessage,
+    )
+  ) {
+    return new RepoAccessError(
+      "Could not reach GitHub. Check your internet connection and try again.",
+      502,
+      "NETWORK",
+    );
+  }
+
   const rateLimitRemaining = getHeader("x-ratelimit-remaining");
   const retryAfter = getHeader("retry-after");
 
@@ -83,8 +127,16 @@ function toRepoAccessError(
         (typeof responseMessage === "string" &&
           responseMessage.toLowerCase().includes("rate limit"))))
   ) {
+    const rateLimitReset = getHeader("x-ratelimit-reset");
+    const resetSeconds =
+      typeof rateLimitReset === "string" ? parseInt(rateLimitReset, 10) : NaN;
+
+    const resetHint = Number.isFinite(resetSeconds)
+      ? `Retry after ${new Date(resetSeconds * 1000).toLocaleTimeString()}.`
+      : "Please wait a few minutes and try again.";
+
     return new RepoAccessError(
-      "GitHub API rate limit reached. Please wait a few minutes and try again.",
+      `GitHub API rate limit reached. ${resetHint}`,
       429,
       "RATE_LIMITED",
     );
@@ -133,7 +185,12 @@ export async function getRepoSnapshot(
   repo: string,
   accessToken?: string,
 ) {
-  const client = createOctokit(accessToken);
+  const abortController = new AbortController();
+  const timeoutId = setTimeout(
+    () => abortController.abort(),
+    GITHUB_API_TIMEOUT_MS,
+  );
+  const client = createOctokit(accessToken, abortController.signal);
 
   const getNestedString = (
     obj: unknown,
@@ -224,5 +281,7 @@ export async function getRepoSnapshot(
     };
   } catch (error: unknown) {
     throw toRepoAccessError(error, Boolean(accessToken));
+  } finally {
+    clearTimeout(timeoutId);
   }
 }

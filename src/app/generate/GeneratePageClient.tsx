@@ -16,6 +16,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
   const [markdown, setMarkdown] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [authRequired, setAuthRequired] = useState(false);
   const [privateRepoConsentRequired, setPrivateRepoConsentRequired] =
     useState(false);
@@ -38,6 +39,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
     setIsLoading(true);
     setMarkdown("");
     setErrorMessage(null);
+    setErrorCode(null);
     setAuthRequired(false);
     setPrivateRepoConsentRequired(false);
     try {
@@ -50,6 +52,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
       if (!response.ok) {
         let extractedMessage: string;
         let requiresAuth = false;
+        let extractedErrorCode: string | null = null;
         const contentType = response.headers.get("content-type") || "";
 
         if (contentType.includes("application/json")) {
@@ -57,6 +60,8 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
           extractedMessage =
             errorData.message || errorData.error || response.statusText;
           requiresAuth = Boolean(errorData.authRequired);
+          extractedErrorCode =
+            typeof errorData.error === "string" ? errorData.error : null;
           setPrivateRepoConsentRequired(
             errorData.error === "private_repo_consent_required",
           );
@@ -71,6 +76,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
         }
 
         setAuthRequired(requiresAuth);
+        setErrorCode(extractedErrorCode?.toLowerCase() ?? null);
         throw new Error(extractedMessage);
       }
 
@@ -96,6 +102,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
   const clearGenerateFormState = () => {
     setPrivateRepoConsentRequired(false);
     setErrorMessage(null);
+    setErrorCode(null);
     setAuthRequired(false);
   };
 
@@ -119,6 +126,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
           ariaLabel="Enter GitHub repository URL to generate README"
           serverError={errorMessage}
           authRequired={authRequired}
+          serverErrorCode={errorCode}
           privateRepoConsentRequired={privateRepoConsentRequired}
           onClearPrivateRepoConsent={clearGenerateFormState}
         />
