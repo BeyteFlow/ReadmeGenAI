@@ -14,6 +14,7 @@ import {
   loadHistory,
   removeHistoryEntry,
   saveHistory,
+  saveHistoryWithoutEviction,
   GENERATION_HISTORY_KEY,
   type GenerationHistoryEntry,
 } from "@/lib/generationHistory";
@@ -168,8 +169,9 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
 
   const handleDeleteHistoryEntry = (entryId: string) => {
     const nextHistory = removeHistoryEntry(history, entryId);
-    const persisted = saveHistory(nextHistory);
-    setHistory(persisted ?? nextHistory);
+    if (!saveHistoryWithoutEviction(nextHistory)) return;
+
+    setHistory(nextHistory);
 
     if (activeHistoryEntryId === entryId) {
       setActiveHistoryEntryId(undefined);
