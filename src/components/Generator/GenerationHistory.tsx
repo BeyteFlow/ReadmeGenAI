@@ -8,6 +8,7 @@ interface GenerationHistoryProps {
   entries: GenerationHistoryEntry[];
   activeEntryId?: string;
   onRestore: (entry: GenerationHistoryEntry) => void;
+  onDelete: (entryId: string) => void;
   onClearAll: () => void;
 }
 
@@ -29,6 +30,7 @@ export const GenerationHistory = ({
   entries,
   activeEntryId,
   onRestore,
+  onDelete,
   onClearAll,
 }: GenerationHistoryProps) => {
   const [open, setOpen] = useState(true);
@@ -98,14 +100,14 @@ export const GenerationHistory = ({
           {entries.map((entry) => {
             const isActive = entry.id === activeEntryId;
             return (
-              <li key={entry.id}>
+              <li key={entry.id} className="group flex items-center">
                 <button
                   type="button"
                   onClick={() => {
                     setOpen(false);
                     onRestore(entry);
                   }}
-                  className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5 ${
+                  className={`flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white/5 ${
                     isActive ? "bg-blue-500/10" : ""
                   }`}
                 >
@@ -123,6 +125,15 @@ export const GenerationHistory = ({
                   <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-zinc-400">
                     {entry.language}
                   </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(entry.id)}
+                  aria-label={`Delete generation for ${entry.url}`}
+                  title="Delete generation"
+                  className="mr-4 shrink-0 rounded p-1.5 text-zinc-600 opacity-0 transition-colors hover:bg-red-500/10 hover:text-red-400 focus:opacity-100 group-hover:opacity-100"
+                >
+                  <Trash2 size={14} />
                 </button>
               </li>
             );

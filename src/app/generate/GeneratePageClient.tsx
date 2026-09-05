@@ -12,6 +12,7 @@ import {
   appendGeneration,
   clearHistory,
   loadHistory,
+  removeHistoryEntry,
   saveHistory,
   GENERATION_HISTORY_KEY,
   type GenerationHistoryEntry,
@@ -165,6 +166,16 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
     clearHistory();
   };
 
+  const handleDeleteHistoryEntry = (entryId: string) => {
+    const nextHistory = removeHistoryEntry(history, entryId);
+    const persisted = saveHistory(nextHistory);
+    setHistory(persisted ?? nextHistory);
+
+    if (activeHistoryEntryId === entryId) {
+      setActiveHistoryEntryId(undefined);
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-black text-white">
       {/* UI LOADING OVERLAY 
@@ -199,6 +210,7 @@ export default function GeneratePageClient({ repoSlug }: GeneratePageProps) {
             entries={history}
             activeEntryId={activeHistoryEntryId}
             onRestore={handleRestoreGeneration}
+            onDelete={handleDeleteHistoryEntry}
             onClearAll={handleClearHistory}
           />
         </div>
