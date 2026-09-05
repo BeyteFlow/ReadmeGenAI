@@ -130,6 +130,19 @@ export function saveHistory(
   }
 }
 
+export function saveHistoryWithoutEviction(
+  entries: GenerationHistoryEntry[],
+  storage: StorageLike | null = getStorage(),
+): boolean {
+  if (!storage) return false;
+  try {
+    storage.setItem(GENERATION_HISTORY_KEY, JSON.stringify(entries));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function clearHistory(storage: StorageLike | null = getStorage()): void {
   if (!storage) return;
   try {
