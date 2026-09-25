@@ -44,6 +44,7 @@ export const SearchInput = ({
 
   const languages = [
     "English",
+    "Danish",
     "Spanish",
     "French",
     "German",

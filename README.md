@@ -1,4 +1,6 @@
 <h1 align="center">ReadmeGenAI</h1>
+
+<p align="center"><a href="README.da.md">Læs dokumentationen på dansk</a></p>
 <p align="center">
   <strong>Instantly generate professional, well-structured README files for your GitHub repositories with AI-powered precision.</strong>
 </p>
