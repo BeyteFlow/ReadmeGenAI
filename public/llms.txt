@@ -1,0 +1,21 @@
+# ReadmeGenAI
+
+> ReadmeGenAI is a free, open-source AI README generator for GitHub projects. Paste a GitHub repository URL and it analyzes the repo structure and metadata with Google Gemini, then returns a professional README.md in clean, standard Markdown.
+
+- Works with any public GitHub repository. Sign in with GitHub to generate READMEs for private repositories.
+- READMEs can be generated in English, Danish, Spanish, French, German, Chinese, Japanese, Korean, Portuguese, Russian, Arabic and Turkish.
+- Built with Next.js, TypeScript, Tailwind CSS, Octokit and the Gemini API. Licensed under MIT.
+
+## Pages
+
+- [Home](https://readmegen-ai.vercel.app/): Overview of ReadmeGenAI and what it does
+- [Generate](https://readmegen-ai.vercel.app/generate): Paste a GitHub repository URL and generate a README
+- [Features](https://readmegen-ai.vercel.app/features): Gemini-powered generation, GitHub integration and framework-aware output
+- [Examples](https://readmegen-ai.vercel.app/examples): Sample READMEs generated for Next.js apps, TypeScript libraries, Go backends and more
+- [Docs](https://readmegen-ai.vercel.app/docs): Quick start, configuration, troubleshooting and FAQ
+
+## Source
+
+- [GitHub repository](https://github.com/BeyteFlow/ReadmeGenAI): Source code, issues and pull requests
+- [README](https://github.com/BeyteFlow/ReadmeGenAI/blob/main/README.md): Project overview, architecture and local setup
+- [License](https://github.com/BeyteFlow/ReadmeGenAI/blob/main/LICENSE): MIT License
