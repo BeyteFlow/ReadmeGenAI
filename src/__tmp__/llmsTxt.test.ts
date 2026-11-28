@@ -12,7 +12,8 @@ function readLinks(text: string): string[] {
 
 function pageFileFor(pathname: string): string {
   const segments = pathname.split("/").filter(Boolean);
-  return join(ROOT, "src", "app", ...segments, "page.tsx");
+  const pagePath = join(ROOT, "src", "app", ...segments, "page.tsx");
+  return existsSync(pagePath) ? pagePath : join(ROOT, "public", ...segments);
 }
 
 describe("public/llms.txt", () => {
@@ -28,7 +29,7 @@ describe("public/llms.txt", () => {
     expect(lines[1]).toMatch(/^> \S/);
   });
 
-  it("uses absolute links that point to existing site pages", () => {
+  it("uses absolute links that point to existing site pages or public files", () => {
     const links = readLinks(readFileSync(LLMS_TXT_PATH, "utf8"));
     expect(links.length).toBeGreaterThan(0);
 

@@ -24,6 +24,14 @@ export const Footer = () => (
         >
           <Github size={22} />
         </a>
+        <a
+          href="https://naheel.me"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-zinc-500 text-sm hover:text-white transition-colors"
+        >
+          Maintained by Naheel
+        </a>
       </div>
     </div>
   </footer>

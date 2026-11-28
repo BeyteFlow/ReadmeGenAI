@@ -5,6 +5,8 @@
 - Works with any public GitHub repository. Sign in with GitHub to generate READMEs for private repositories.
 - READMEs can be generated in English, Danish, Spanish, French, German, Chinese, Japanese, Korean, Portuguese, Russian, Arabic and Turkish.
 - Built with Next.js, TypeScript, Tailwind CSS, Octokit and the Gemini API. Licensed under MIT.
+- Maintained by Naheel: [portfolio](https://naheel.me)
+- [Full project reference](https://readmegen-ai.vercel.app/llms-full.txt)
 
 ## Pages
 
