@@ -122,6 +122,10 @@ Example:
 NEXT_PUBLIC_AI_API_KEY=your_ai_api_key_here
 ```
 
+## Maintainer
+
+ReadmeGenAI is maintained by [Naheel](https://naheel.me).
+
 ## Community & Governance
 
 ReadmeGenAI thrives on community contributions and open collaboration.

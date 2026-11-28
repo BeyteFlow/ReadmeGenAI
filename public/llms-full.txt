@@ -1,0 +1,54 @@
+# ReadmeGenAI
+
+> ReadmeGenAI is a free, open-source web app that generates professional README.md files from GitHub repository metadata and file structure.
+
+## Overview
+
+ReadmeGenAI helps developers create a structured README for a GitHub repository. Enter a repository URL, choose an output language, and the app uses Google Gemini to generate Markdown that can be reviewed and used in the project.
+
+The app supports public repositories. Private repositories require GitHub sign-in and explicit consent before repository metadata and file names are sent to the AI model.
+
+## How generation works
+
+1. The user submits a GitHub repository URL and selects an output language.
+2. The app validates the URL and retrieves repository metadata and a list of repository file paths through GitHub's API.
+3. The app uses that metadata and file list as context for Google Gemini.
+4. Gemini returns README content as Markdown for the user to review.
+
+The current generation route builds its prompt from repository description, primary language, license, root file paths, and simple technology indicators. It does not send source file contents to the model.
+
+## Supported output languages
+
+English, Danish, Spanish, French, German, Chinese, Japanese, Korean, Portuguese, Russian, Arabic, and Turkish.
+
+## Main pages
+
+- [Home](https://readmegen-ai.vercel.app/): Product overview and introduction to AI-generated GitHub READMEs.
+- [Generate](https://readmegen-ai.vercel.app/generate): Submit a GitHub repository URL and generate a README.
+- [Features](https://readmegen-ai.vercel.app/features): Overview of generation, GitHub integration, and repository-context features.
+- [Examples](https://readmegen-ai.vercel.app/examples): Example README outputs.
+- [Documentation](https://readmegen-ai.vercel.app/docs): Quick start, usage guidance, and frequently asked questions.
+
+## Technology
+
+- Next.js App Router and React
+- TypeScript
+- Tailwind CSS
+- Octokit for GitHub API access
+- Google Gemini API for README generation
+- NextAuth for GitHub sign-in
+- Vercel Analytics
+
+## Maintainer
+
+ReadmeGenAI is maintained by Naheel. [Visit Naheel's portfolio](https://naheel.me).
+
+## Source and project information
+
+- [GitHub repository](https://github.com/BeyteFlow/ReadmeGenAI): Source code, issues, and pull requests.
+- [Project README](https://github.com/BeyteFlow/ReadmeGenAI/blob/main/README.md): Project overview and local setup.
+- [MIT License](https://github.com/BeyteFlow/ReadmeGenAI/blob/main/LICENSE): License terms.
+
+## Local development
+
+The project uses npm. Install dependencies with `npm install`, then start the local development server with `npm run dev`. The app runs at `http://localhost:3000` by default. Some integrations require environment configuration; consult the repository documentation and deployment settings.
